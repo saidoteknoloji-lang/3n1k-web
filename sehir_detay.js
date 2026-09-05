@@ -1,7 +1,6 @@
 const placeTitle = document.getElementById('placeTitle');
 const siteOwnerText = document.getElementById('siteOwnerText');
 const aiStoryText = document.getElementById('aiStoryText');
-const generateAiButton = document.getElementById('generateAiButton');
 const aiMessage = document.getElementById('aiMessage');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
@@ -29,7 +28,7 @@ function normalizePlaceId(value) {
 }
 
 async function loadSiteOwnerText() {
-    if (!placeName || !siteOwnerText) return;
+    if (!placeName || !siteOwnerText) return {};
 
     try {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -39,12 +38,12 @@ async function loadSiteOwnerText() {
         const siteOwnerTextValue = data.siteSahibi || '';
         if (siteOwnerTextValue) siteOwnerText.textContent = siteOwnerTextValue;
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
+        return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);
+        return {};
     }
 }
-
-loadSiteOwnerText();
 
 async function generateAiStory() {
     if (!placeName) {
@@ -56,7 +55,6 @@ async function generateAiStory() {
         aiMessage.textContent = 'AI sunucusu henüz bağlanmadı. Vercel API adresi gerekli.';
         return;
     }
-    generateAiButton.disabled = true;
     aiMessage.textContent = 'Hikaye oluşturuluyor...';
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
@@ -82,13 +80,11 @@ async function generateAiStory() {
         aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
-        generateAiButton.disabled = false;
     }
 }
 
-generateAiButton.addEventListener('click', event => {
-    event.stopPropagation();
-    generateAiStory();
+loadSiteOwnerText().then(data => {
+    if (!data.yapayZeka) generateAiStory();
 });
 
 const detailBoxes = document.querySelectorAll('.detail-box');

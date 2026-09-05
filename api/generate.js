@@ -33,7 +33,21 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Türkiye'deki "${sehirAdi}" adlı yer hakkında kültürel mirasa saygılı, doğrulanmamış bilgileri kesin gerçek gibi sunmayan, kısa ve sürükleyici bir yer hikayesi yaz. Yanıtı Türkçe ver.`
+              text: `Türkiye'deki "${sehirAdi}" adlı yer için Türkçe, bilgilendirici ve anlaşılır bir metin hazırla. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver:
+
+KİM?
+Bu yerle ilişkili kişi, topluluk veya kültür kimdir? Yeterli doğrulanmış bilgi yoksa "Bu konuda doğrulanmış bilgi bulunamadı." yaz.
+
+NE?
+Yer nedir ve bilinen özelliği nedir? Sadece güvenilir ve genel bilgileri kullan.
+
+NEDEN?
+Bu yerin kültürel veya tarihî önemi nedir? Emin olmadığın bilgileri kesin gerçek gibi sunma.
+
+NASIL?
+Bu yerin hikayesi veya gelişimi nasıl açıklanabilir? Efsaneleri gerçeklerden açıkça ayır.
+
+Kurallar: Bilgi uydurma, tarih/kişi/olay icat etme, kaynak yoksa kesin konuşma. Doğrulanmamış bir iddia için "rivayete göre" veya "doğrulanmamıştır" ifadesini kullan. Her başlığın altında yalnızca bir paragraf yaz. Başlıklar dışında giriş, sonuç, kaynakça veya madde işareti ekleme.`
             }]
           }]
         })

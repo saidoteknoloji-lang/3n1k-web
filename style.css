@@ -169,8 +169,8 @@ nav ul li a:hover {
 }
 
 .search-container input:focus {
-    border: 1px solid #e06d53;
-    box-shadow: 0 0 0 4px rgba(224,109,83,.2), 0 8px 24px rgba(0,0,0,.16);
+    border: 1px solid #94a3b8;
+    box-shadow: 0 0 0 4px rgba(148,163,184,.2), 0 8px 24px rgba(0,0,0,.16);
 }
 
 .search-container button {
@@ -229,7 +229,7 @@ nav ul li a:hover {
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     font-size: 15px;
-    color: #1a2536;
+    color: #526071;
     text-align: left;
     transition: background-color .18s ease, color .18s ease, padding-left .18s ease;
 }
@@ -239,15 +239,15 @@ nav ul li a:hover {
 }
 
 .search-item:hover {
-    background-color: #fff1ec;
-    color: #c5543c;
+    background-color: #f1f5f9;
+    color: #526071;
     padding-left: 24px;
 }
 
 .search-item strong {
     display: block;
     font-size: 16px;
-    color: #1a2536;
+    color: #526071;
     margin-bottom: 4px;
 }
 

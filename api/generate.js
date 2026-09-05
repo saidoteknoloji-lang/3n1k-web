@@ -1,5 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
 export default async function handler(req, res) {
   const allowedOrigins = ["https://n1k-12d03.web.app", "http://127.0.0.1:5500", "http://localhost:5500"];
   const origin = req.headers.origin;
@@ -27,16 +25,26 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GEMINI_API_KEY Vercel ortam değişkeninde tanımlı değil." });
     }
 
-    // Vercel panelinden tanımlayacağımız gizli anahtarı çağırıyoruz
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-    // Gemini 2.5 Flash ile içerik üretme
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Türkiye'deki "${sehirAdi}" adlı yer hakkında kültürel mirasa saygılı, doğrulanmamış bilgileri kesin gerçek gibi sunmayan, kısa ve sürükleyici bir yer hikayesi yaz. Yanıtı Türkçe ver.`,
-    });
-
-    return res.status(200).json({ hikaye: response.text || "" });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Türkiye'deki "${sehirAdi}" adlı yer hakkında kültürel mirasa saygılı, doğrulanmamış bilgileri kesin gerçek gibi sunmayan, kısa ve sürükleyici bir yer hikayesi yaz. Yanıtı Türkçe ver.`
+            }]
+          }]
+        })
+      }
+    );
+    const result = await response.json();
+    if (!response.ok) {
+      return res.status(502).json({ error: "Gemini isteği başarısız.", detail: result.error?.message || "Bilinmeyen Gemini hatası." });
+    }
+    const hikaye = result.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("").trim();
+    return res.status(200).json({ hikaye: hikaye || "Gemini boş yanıt döndürdü." });
 
   } catch (error) {
     console.error("Gemini API Hatası:", error);

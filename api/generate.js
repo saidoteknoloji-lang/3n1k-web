@@ -39,7 +39,16 @@ export default async function handler(req, res) {
         })
       }
     );
-    const result = await response.json();
+    const rawResponse = await response.text();
+    let result;
+    try {
+      result = JSON.parse(rawResponse);
+    } catch {
+      return res.status(502).json({
+        error: "Google Gemini geçersiz bir yanıt döndürdü.",
+        detail: `Google HTTP ${response.status}: ${rawResponse.slice(0, 180)}`
+      });
+    }
     if (!response.ok) {
       return res.status(502).json({ error: "Gemini isteği başarısız.", detail: result.error?.message || "Bilinmeyen Gemini hatası." });
     }

@@ -69,7 +69,7 @@ async function generateAiStory() {
             throw new Error('AI sunucusu bulunamadı. Vercel API adresini ayarlayın.');
         }
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Hikaye oluşturulamadı.');
+        if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         aiMessage.textContent = 'Hikaye oluşturuldu.';
         if (firebase.apps.length) {

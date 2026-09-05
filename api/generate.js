@@ -40,6 +40,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Gemini API Hatası:", error);
-    return res.status(500).json({ error: "Hikaye oluşturulurken bir hata oluştu." });
+    return res.status(502).json({
+      error: "Gemini hikaye servisi cevap vermedi.",
+      detail: error instanceof Error ? error.message : "Bilinmeyen Gemini hatası."
+    });
   }
 }

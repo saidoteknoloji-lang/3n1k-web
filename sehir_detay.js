@@ -55,6 +55,7 @@ async function generateAiStory() {
         aiMessage.textContent = 'AI sunucusu henüz bağlanmadı. Vercel API adresi gerekli.';
         return;
     }
+    aiMessage.classList.add('ai-loading');
     aiMessage.textContent = 'Hikaye oluşturuluyor...';
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
@@ -70,6 +71,7 @@ async function generateAiStory() {
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         aiMessage.textContent = 'Hikaye oluşturuldu.';
+        aiMessage.classList.remove('ai-loading');
         if (firebase.apps.length) {
             await firebase.firestore().collection('yerler').doc(placeId).set({
                 yapayZeka: result.hikaye,
@@ -78,6 +80,7 @@ async function generateAiStory() {
         }
     } catch (error) {
         aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
+        aiMessage.classList.remove('ai-loading');
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
     }
@@ -98,17 +101,19 @@ function closeDetailModal() {
     detailModal.setAttribute('aria-hidden', 'true');
 }
 
-detailBoxes.forEach(box => {
-    box.addEventListener('click', () => {
-        box.classList.toggle('is-expanded');
-    });
-
-    box.addEventListener('dblclick', () => {
+function openDetailModal(box) {
+        box.classList.add('is-expanded');
         modalTitle.textContent = box.querySelector('h2').textContent;
         modalText.textContent = box.querySelector('p').textContent;
         detailModal.classList.add('is-open');
         detailModal.setAttribute('aria-hidden', 'false');
-    });
+}
+
+detailBoxes.forEach(box => {
+    if (box.classList.contains('detail-main-box')) {
+        box.addEventListener('click', () => openDetailModal(box));
+    }
+    box.addEventListener('dblclick', () => openDetailModal(box));
 });
 
 modalClose.addEventListener('click', closeDetailModal);

@@ -119,8 +119,22 @@ if (typeof L !== 'undefined' && document.getElementById('map')) {
     // Konum bulma: tarayıcı izin verirse kullanıcı konumunu göster
     if (navigator.geolocation) {
         map.locate({ setView: true, maxZoom: 13 });
-        map.on('locationfound', function (e) {
-            const marker = L.marker(e.latlng).addTo(map).bindPopup('Sizin konumunuz').openPopup();
+        map.on('locationfound', async function (e) {
+            const fallbackName = `Konumum (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
+            let placeName = fallbackName;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`);
+                if (response.ok) {
+                    const result = await response.json();
+                    const address = result.address || {};
+                    placeName = address.road || address.neighbourhood || address.suburb || address.city || result.display_name || fallbackName;
+                }
+            } catch (error) {
+                console.warn('Konum adı alınamadı.', error);
+            }
+            const detailUrl = `sehir_detay.html?q=${encodeURIComponent(placeName)}`;
+            const popup = `<strong>${placeName}</strong><br><a href="${detailUrl}">Detay sayfasını aç</a>`;
+            L.marker(e.latlng).addTo(map).bindPopup(popup).openPopup();
             L.circle(e.latlng, { radius: e.accuracy / 2 }).addTo(map);
         });
         map.on('locationerror', function () {

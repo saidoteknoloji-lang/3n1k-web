@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil | Yer Adları</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="profil.css">
+</head>
+<body class="profile-page-body">
+    <header>
+        <div class="header-left">
+            <div class="logo"><a href="index.html"><h1><span>Yer</span> Adları</h1></a></div>
+        </div>
+        <nav class="header-right">
+            <ul>
+                <li><a href="hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="ekle.html">Ekle</a></li>
+                <li class="notification-wrap">
+                    <button id="notificationButton" class="notification-button" type="button" aria-label="Bildirimler">&#128276;<span id="notificationCount" class="notification-count" hidden>0</span></button>
+                    <div id="notificationPanel" class="notification-panel" aria-hidden="true"><p>Bildirim yok.</p></div>
+                </li>
+                <li><a href="profil.html" class="profile-link" aria-label="Hesabım">◯</a></li>
+            </ul>
+        </nav>
+        <a class="page-back" href="index.html">Ana sayfa</a>
+    </header>
+
+    <main class="profile-shell">
+        <section class="profile-header">
+            <div class="avatar" aria-label="Varsayılan profil resmi">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="49" fill="#e06d53"/><circle cx="50" cy="38" r="16" fill="#fcf9f2"/><path d="M22 82c3-18 14-27 28-27s25 9 28 27" fill="#fcf9f2"/></svg>
+            </div>
+            <div class="profile-info">
+                <div class="profile-title-row">
+                    <h2 id="profileUsername">Kullanıcı</h2>
+                    <button id="settingsBtn" class="outline-btn" type="button">Ayarlar</button>
+                </div>
+                <div class="profile-stats"><span><strong>0</strong> katkı</span></div>
+                <p id="profileEmail" class="profile-email"></p>
+                <p class="profile-bio">Yer adlarının hikayelerini keşfediyor ve kültürel hafızaya katkı sağlıyor.</p>
+            </div>
+        </section>
+
+        <section class="contributions-section">
+            <div class="section-heading"><h3>Katkılarım</h3><span>Henüz katkı yok</span></div>
+            <div class="empty-contributions"><span>+</span><p>Paylaştığın yer hikayeleri burada görünecek.</p><a href="ekle.html">İlk katkını ekle</a></div>
+        </section>
+    </main>
+
+    <div id="settingsOverlay" class="settings-overlay" aria-hidden="true">
+        <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <button id="settingsClose" class="auth-close" type="button" aria-label="Kapat">✕</button>
+            <h3 id="settingsTitle">Profil ayarları</h3>
+            <form id="usernameForm" class="auth-form">
+                <label>Kullanıcı adı<input id="usernameInput" type="text" minlength="3" maxlength="30" required></label>
+                <button class="primary" type="submit">Kaydet</button>
+            </form>
+            <p id="settingsMsg" class="auth-msg" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="profil.js"></script>
+</body>
+</html>

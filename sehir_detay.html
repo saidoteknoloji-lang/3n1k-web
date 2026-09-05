@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şehir Detayı | Yer Adları</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .detail-page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 80px; }
+        .detail-title { color: #1a2536; font-size: clamp(28px, 5vw, 48px); margin-bottom: 34px; }
+        .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+        .detail-box { min-height: 190px; background: #fff; border: 1px solid #dedbd4; border-radius: 8px; padding: 24px; box-shadow: 0 4px 14px rgba(26, 37, 54, .06); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .detail-box:hover { border-color: #e06d53; box-shadow: 0 8px 20px rgba(26, 37, 54, .12); }
+        .detail-box.is-expanded { transform: scale(1.03); box-shadow: 0 12px 28px rgba(26, 37, 54, .18); border-color: #e06d53; }
+        .comments-box { grid-column: 1 / -1; min-height: 150px; }
+        .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
+        .detail-box p { color: #64748b; line-height: 1.6; }
+        .detail-box small { display: inline-block; color: #e06d53; font-weight: 600; margin-bottom: 16px; }
+        .detail-modal { position: fixed; inset: 0; z-index: 2500; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(26, 37, 54, .72); }
+        .detail-modal.is-open { display: flex; }
+        .detail-modal-content { position: relative; width: min(760px, 100%); min-height: 360px; padding: 38px; background: #fff; border-radius: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); }
+        .detail-modal-content h2 { color: #1a2536; font-size: 30px; margin-bottom: 18px; }
+        .detail-modal-content p { color: #526071; line-height: 1.75; font-size: 17px; }
+        .detail-modal-close { position: absolute; top: 12px; right: 16px; border: 0; background: transparent; color: #1a2536; font-size: 24px; cursor: pointer; }
+        .comment-form { display: grid; gap: 10px; margin-top: 18px; }
+        .comment-form textarea { width: 100%; min-height: 90px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical; font: inherit; }
+        .comment-action { width: fit-content; border: 0; border-radius: 6px; padding: 10px 16px; background: #1a2536; color: #fff; cursor: pointer; }
+        .comment-list { display: grid; gap: 14px; margin-top: 20px; }
+        .comment-card { position: relative; padding: 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+        .comment-author { display: flex; align-items: center; gap: 10px; color: #1a2536; font-weight: 700; text-decoration: none; }
+        .comment-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #e06d53; color: #fff; font-size: 14px; }
+        .comment-text { margin: 10px 0; color: #526071; white-space: pre-wrap; }
+        .comment-tools { display: flex; gap: 12px; align-items: center; }
+        .comment-tools button { border: 0; background: transparent; color: #64748b; cursor: pointer; padding: 0; }
+        .comment-reply { display: none; margin-top: 10px; gap: 8px; }
+        .comment-reply.is-open { display: flex; }
+        .comment-reply input { flex: 1; min-width: 0; padding: 8px; border: 1px solid #d1d5db; border-radius: 5px; }
+        .comment-reply button { border: 0; border-radius: 5px; background: #e06d53; color: #fff; padding: 8px 10px; cursor: pointer; }
+        .comment-replies { margin: 12px 0 0 44px; display: grid; gap: 8px; }
+        .comment-reply-item { border-left: 2px solid #e06d53; padding-left: 10px; color: #526071; }
+        .comment-menu { position: absolute; top: 12px; right: 12px; border: 0; background: transparent; color: #64748b; cursor: pointer; }
+        .comment-status { min-height: 20px; color: #e06d53; margin-top: 8px; }
+        @media (max-width: 759px) { .detail-grid { grid-template-columns: 1fr; } .comments-box { grid-column: auto; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="logo"><a href="index.html"><h1><span>Yer</span> Adları</h1></a></div>
+        </div>
+        <nav class="header-right">
+            <ul>
+                <li><a href="hakkimizda.html">Hakkımızda</a></li>
+                <li><a href="ekle.html">Ekle</a></li>
+                <li><a href="profil.html" class="profile-link" aria-label="Hesabım">◯</a></li>
+            </ul>
+        </nav>
+       
+    </header>
+
+    <main class="detail-page">
+        <h1 id="placeTitle" class="detail-title">Yer adı</h1>
+        <section class="detail-grid" aria-label="Yer detayları">
+            <article class="detail-box detail-main-box">
+                <small>01</small>
+                <h2>Benim Kutum</h2>
+                <p id="siteOwnerText">Bu alan için henüz bilgi girilmedi.</p>
+            </article>
+            <article class="detail-box detail-main-box">
+                <small>02</small>
+                <h2>Python Botu</h2>
+                <p>Python botundan gelecek bilgiler burada görünecek.</p>
+            </article>
+            <article class="detail-box detail-main-box">
+                <small>03</small>
+                <h2>Yapay Zeka</h2>
+                <p id="aiStoryText">Henüz yapay zeka hikayesi oluşturulmadı.</p>
+                <button id="generateAiButton" class="comment-action" type="button">Hikaye oluştur</button>
+                <p id="aiMessage" class="comment-status" aria-live="polite"></p>
+            </article>
+            <article class="detail-box comments-box">
+                <small>04</small>
+                <h2>Kullanıcı Yorumları</h2>
+                <p id="commentStatus">Yorumlar yükleniyor...</p>
+                <form id="commentForm" class="comment-form" hidden>
+                    <textarea id="commentInput" maxlength="1000" placeholder="Bu yer hakkında ne düşünüyorsun? @kullaniciadi ile birinden bahsedebilirsin." required></textarea>
+                    <button class="comment-action" type="submit">Yorum yap</button>
+                </form>
+                <p id="commentMessage" class="comment-status" aria-live="polite"></p>
+                <div id="commentList" class="comment-list"></div>
+            </article>
+        </section>
+    </main>
+
+    <div id="detailModal" class="detail-modal" aria-hidden="true">
+        <article class="detail-modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <button id="modalClose" class="detail-modal-close" type="button" aria-label="Kapat">&times;</button>
+            <h2 id="modalTitle"></h2>
+            <p id="modalText"></p>
+        </article>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="sehir_detay.js?v=2"></script>
+</body>
+</html>

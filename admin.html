@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Yer Adları</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-page { width: min(980px, calc(100% - 40px)); margin: 0 auto; padding: 44px 0 80px; }
+        .admin-title { margin-bottom: 28px; color: #1a2536; }
+        .admin-card { background: #fff; border: 1px solid #dedbd4; border-radius: 8px; padding: 26px; box-shadow: 0 5px 18px rgba(26,37,54,.07); }
+        .admin-card h2 { margin-bottom: 20px; color: #1a2536; }
+        .admin-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .admin-form label { display: flex; flex-direction: column; gap: 7px; color: #526071; font-size: 14px; font-weight: 600; }
+        .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 11px 12px; border: 1px solid #d1d5db; border-radius: 6px; color: #1a2536; font: inherit; }
+        .admin-form textarea { min-height: 130px; resize: vertical; }
+        .admin-form .full { grid-column: 1 / -1; }
+        .admin-actions { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
+        .admin-button { background: #1a2536; color: #fff; border: 0; border-radius: 6px; padding: 11px 18px; cursor: pointer; font-weight: 600; }
+        .admin-button:hover { background: #2d405c; }
+        .admin-message { min-height: 20px; color: #e06d53; }
+        .admin-locked { max-width: 440px; margin: 50px auto; }
+        .admin-help { color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+        .reports-list { display: grid; gap: 12px; margin-top: 18px; }
+        .report-item { padding: 14px; border: 1px solid #e5e7eb; border-radius: 6px; }
+        .report-item p { color: #1a2536; white-space: pre-wrap; margin-bottom: 8px; }
+        .report-item small { display: block; color: #64748b; margin-bottom: 10px; }
+        @media (max-width: 700px) { .admin-form { grid-template-columns: 1fr; } .admin-form .full { grid-column: auto; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left"><div class="logo"><a href="index.html"><h1><span>Yer</span> Adları</h1></a></div></div>
+        <nav class="header-right"><ul><li><a href="index.html">Ana Sayfa</a></li><li><a href="hakkimizda.html">Hakkımızda</a></li></ul></nav>
+    </header>
+
+    <main class="admin-page">
+        <section id="loginCard" class="admin-card admin-locked">
+            <h1 class="admin-title">Admin girişi</h1>
+            <p class="admin-help">Yer bilgisi eklemek için admin kimliğiyle giriş yapın.</p>
+            <form id="adminLoginForm" class="auth-form">
+                <label>Admin ID<input id="adminId" type="text" autocomplete="username" required></label>
+                <label>Şifre<input id="adminPassword" type="password" autocomplete="current-password" required></label>
+                <button class="admin-button" type="submit">Panele gir</button>
+            </form>
+            <p id="loginMessage" class="admin-message" aria-live="polite"></p>
+        </section>
+
+        <section id="entryCard" class="admin-card" hidden>
+            <h1 class="admin-title">Yer bilgisi ekle</h1>
+            <form id="placeForm" class="admin-form">
+                <label>Yer adı<input id="yerAdi" type="text" placeholder="Mürselpaşa Caddesi" required></label>
+                <label>Tür<select id="tur"><option value="il">İl</option><option value="ilce">İlçe</option><option value="mahalle">Mahalle</option><option value="cadde">Cadde</option></select></label>
+                <label>Tam yol<input id="tamYol" type="text" placeholder="Mürselpaşa Caddesi, Yenidoğan, İzmit, Kocaeli"></label>
+                <label>İl<input id="il" type="text"></label>
+                <label>İlçe<input id="ilce" type="text"></label>
+                <label>Mahalle<input id="mahalle" type="text"></label>
+                <label>Enlem<input id="enlem" type="number" step="any"></label>
+                <label>Boylam<input id="boylam" type="number" step="any"></label>
+                <label class="full">Benim Kutum / resmi bilgi<textarea id="siteSahibi"></textarea></label>
+                <label class="full">Python Botu<textarea id="pythonBot"></textarea></label>
+                <label class="full">Yapay Zeka<textarea id="yapayZeka"></textarea></label>
+                <div class="admin-actions full"><button class="admin-button" type="submit">Yer bilgisini kaydet</button><button id="logoutButton" class="admin-button" type="button">Çıkış</button><span id="saveMessage" class="admin-message" aria-live="polite"></span></div>
+            </form>
+        </section>
+
+        <section id="reportsCard" class="admin-card" hidden>
+            <h2>Yorum şikayetleri</h2>
+            <button id="refreshReports" class="admin-button" type="button">Şikayetleri yenile</button>
+            <div id="reportsList" class="reports-list"><p>Şikayetler yükleniyor...</p></div>
+        </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

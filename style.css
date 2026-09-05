@@ -1,0 +1,314 @@
+/* ==========================================================================
+   1. Genel Ayarlar
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #fcf9f2; /* Tarihi taş/krem rengi */
+    color: #1a2536; /* Koyu lacivert yazı */
+}
+
+/* ==========================================================================
+   2. Header & Navigasyon
+   ========================================================================== */
+header {
+    background-color: #1a2536; /* Gece mavisi */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 40px; 
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* Logo ve menü arası boşluk */
+}
+
+.header-right {
+    margin-left: auto;
+}
+
+.header-right ul {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.header-right ul li a {
+    color: #fcf9f2;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 5px 10px;
+}
+
+.header-right ul li a:hover { color: #e06d53; }
+
+/* Mobil: nav kapalıyken gizle, hamburger sağda */
+.hamburger { order: 2; }
+.header-right { order: 1; }
+
+/* Açılır mobil menü (gizli by default) */
+.header-right ul { transition: max-height 0.25s ease; }
+
+
+.logo a {
+    text-decoration: none;
+}
+
+.logo h1 {
+    color: #fcf9f2;
+    font-size: 22px; 
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #e06d53; /* Gün batımı kızılı (Turuncu) */
+}
+
+/* Sol Taraftaki Yazılı Butonlar (Menü) */
+nav ul {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a {
+    color: #fcf9f2;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 5px 10px;
+}
+
+nav ul li a:hover {
+    color: #e06d53;
+}
+
+/* Hamburger (Mobil için) */
+.hamburger {
+    display: none; 
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background-color: #fcf9f2;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+/* ==========================================================================
+   3. Hero / Görsel Alanı (Arama)
+   ========================================================================== */
+.hero {
+    position: relative;
+    height: 60vh;
+    /* Arka plan JavaScript ile atanacak */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #1a2536;
+    padding: 20px;
+    transition: background 0.5s ease; /* Kararma efekti için */
+}
+
+.hero-content h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+    transition: color 0.3s ease;
+}
+
+.search-container {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    gap: 10px;
+    position: relative;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 15px 20px;
+    border: 2px solid transparent;
+    border-radius: 30px;
+    font-size: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    outline: none;
+    transition: border 0.3s ease;
+}
+
+.search-container input:focus {
+    border: 2px solid #e06d53;
+}
+
+.search-container button {
+    background-color: #e06d53;
+    color: white;
+    border: none;
+    padding: 0 30px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(224, 109, 83, 0.3);
+}
+
+.search-container button:hover {
+    background-color: #c5543c;
+}
+
+/* Buton tıklama animasyonu sınıfı */
+.btn-clicked {
+    transform: scale(1.15) !important;
+    background-color: #c5543c !important;
+}
+
+/* ==========================================================================
+   4. Arama Sonuç Listesi
+   ========================================================================== */
+.search-results-box {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    width: 100%; 
+    background-color: white;
+    border: 1px solid #d2d6dc;
+    border-radius: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 2000;
+    display: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    text-align: left;
+}
+
+.search-item {
+    display: block;
+    width: 100%;
+    background: #fff;
+    border: 0;
+    padding: 15px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 15px;
+    color: #1a2536;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.search-item:last-child {
+    border-bottom: none;
+}
+
+.search-item:hover {
+    background-color: #f1f5f9;
+    color: #1a2536;
+}
+
+.search-item strong {
+    display: block;
+    font-size: 16px;
+    color: #1a2536;
+    margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   5. Harita & Konum Bölümü
+   ========================================================================== */
+.map-section {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.map-placeholder {
+    width: 100%;
+    height: 450px;
+    background-color: #e2e8f0;
+    border: 3px solid #1a2536;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #64748b;
+    font-size: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+    z-index: 1; /* Dropdown menülerin altında kalması için */
+}
+
+/* Profil ikonu stili */
+.profile-link svg {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    fill: #fcf9f2;
+}
+
+.site-footer {
+    background-color: #1a2536;
+    color: #f4f4f4;
+    padding: 25px 20px;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 30px;
+}
+
+.site-footer a {
+    color: #e06d53;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   6. Mobil Medya Sorguları
+   ========================================================================== */
+@media (max-width: 768px) {
+    header { padding: 12px 20px; }
+    .header-right { display: none; }
+    .hamburger { display: flex; }
+    /* Açıldığında nav göster */
+    header.nav-open .header-right { display: block; position: absolute; right: 0; top: 64px; background: #1a2536; width: 100%; padding: 12px 20px; }
+    header.nav-open .header-right ul { display: flex; flex-direction: column; gap: 12px; }
+}
+
+/* Auth panel styles */
+.auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; }
+.auth-overlay[aria-hidden="false"] { display: flex; }
+.auth-panel { background: #fff; color: #1a2536; width: 360px; max-width: calc(100% - 40px); border-radius: 8px; padding: 20px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+.auth-close { position: absolute; right: 10px; top: 8px; background: transparent; border: none; font-size: 18px; cursor: pointer; }
+.auth-tabs { display:flex; gap:8px; margin-bottom:12px; }
+.tab-btn { flex:1; padding:8px 10px; background:#f1f5f9; border:none; cursor:pointer; border-radius:6px; }
+.tab-btn.active { background:#e06d53; color:#fff; }
+.auth-form { display:flex; flex-direction:column; gap:10px; }
+.auth-form label { display:flex; flex-direction:column; font-size:14px; }
+.auth-form input { padding:10px; border-radius:6px; border:1px solid #d1d5db; }
+.primary { background:#1a2536; color:#fff; border:none; padding:10px; border-radius:6px; cursor:pointer; }
+.auth-msg { margin-top:10px; color:#e06d53; min-height:18px; }

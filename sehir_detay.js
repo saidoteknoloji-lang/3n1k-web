@@ -7,7 +7,8 @@ const pythonSkeleton = document.getElementById('pythonSkeleton');
 const siteOwnerSkeleton = document.getElementById('siteOwnerSkeleton');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
-const aiPromptVersion = 'place-name-v2';
+const aiPromptVersion = 'place-name-v3';
+let aiStatusTimers = [];
 
 const firebaseConfig = {
     apiKey: 'AIzaSyBvwsj1EJCOzDpi94vUQuFtZgtvVK66OUU',
@@ -63,8 +64,7 @@ async function generateAiStory() {
         aiMessage.textContent = 'AI sunucusu henüz bağlanmadı. Vercel API adresi gerekli.';
         return;
     }
-    aiMessage.classList.add('ai-loading');
-    aiMessage.textContent = 'Hikaye oluşturuluyor...';
+    startAiStatusMessages();
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
             method: 'POST',
@@ -78,8 +78,7 @@ async function generateAiStory() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
-        aiMessage.textContent = 'Hikaye oluşturuldu.';
-        aiMessage.classList.remove('ai-loading');
+        stopAiStatusMessages('Aha, bitti.');
         if (firebase.apps.length) {
             await firebase.firestore().collection('yerler').doc(placeId).set({
                 yapayZeka: result.hikaye,
@@ -88,11 +87,33 @@ async function generateAiStory() {
             }, { merge: true });
         }
     } catch (error) {
-        aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
-        aiMessage.classList.remove('ai-loading');
+        stopAiStatusMessages(error.message || 'Hikaye oluşturulamadı.', false);
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
     }
+}
+
+function startAiStatusMessages() {
+    stopAiStatusMessages();
+    aiMessage.hidden = false;
+    aiMessage.classList.add('ai-loading');
+    aiMessage.textContent = 'Kaynaklar taranıyor...';
+    const statuses = [
+        [3000, 'Metin yazılıyor...'],
+        [6000, 'Metin düzenleniyor...'],
+        [9000, 'Neredeyse hazır...']
+    ];
+    aiStatusTimers = statuses.map(([delay, message]) => setTimeout(() => {
+        aiMessage.textContent = message;
+    }, delay));
+}
+
+function stopAiStatusMessages(message, hide = true) {
+    aiStatusTimers.forEach(timer => clearTimeout(timer));
+    aiStatusTimers = [];
+    aiMessage.textContent = message || '';
+    aiMessage.classList.remove('ai-loading');
+    aiMessage.hidden = hide;
 }
 
 loadSiteOwnerText().then(data => {

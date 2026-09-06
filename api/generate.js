@@ -55,21 +55,21 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Türkiye'deki "${sehirAdi}" adlı yer için Türkçe, bilgilendirici ve anlaşılır bir metin hazırla. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver. Başlıkları tek başına bir satırda yaz:
+              text: `Türkiye'deki "${sehirAdi}" yer adının kökenini ve adlandırılma hikâyesini araştıran Türkçe, bilgilendirici ve anlaşılır bir metin hazırla. Şehrin genel turistik tanıtımını, doğal güzelliklerini veya genel tarihini anlatma; yalnızca yer adının anlamına, dilsel kökenine, kimler tarafından kullanıldığına, neden verildiğine ve zaman içinde nasıl değiştiğine odaklan. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver. Başlıkları tek başına bir satırda yaz:
 
 KİM?
-Bu yerle ilişkili kişi, topluluk veya kültür kimdir? Yeterli doğrulanmış bilgi yoksa "Bu konuda doğrulanmış bilgi bulunamadı." yaz.
+Bu yer adını ilk kullanan, veren veya yaygınlaştıran kişi, topluluk, halk ya da uygarlık kimdir? Şehirde yaşamış tüm uygarlıkları listeleme; yalnızca adın kökeniyle doğrudan ilişkili aktörü anlat. Kişi veya topluluk adıyla ilgili güvenilir kanıt yoksa bunu açıkça belirt ve genel nüfus bilgisini yazma. Yeterli doğrulanmış bilgi yoksa "Bu konuda doğrulanmış bilgi bulunamadı." yaz.
 
 NE?
-Yer nedir ve bilinen özelliği nedir? Sadece güvenilir ve genel bilgileri kullan.
+"${sehirAdi}" yer adı ne anlama gelir? Hangi dile, eski ada veya kelime köküne dayandığı biliniyor mu? Şehrin konumunu, nüfusunu, turistik yerlerini veya doğal özelliklerini anlatma; yalnızca adın anlamını ve kökenini yaz. Köken kesin değilse olası açıklamaları kesin gerçek gibi sunma.
 
 NEDEN?
-Bu yerin kültürel veya tarihî önemi nedir? Emin olmadığın bilgileri kesin gerçek gibi sunma.
+Bu ad neden verilmiş olabilir? Adın bir kişi, topluluk, dil, coğrafi özellik veya tarihî olayla ilişkisi var mı? Şehrin genel tarihî önemini anlatma; yalnızca adlandırma nedenini açıkla. Emin olmadığın bilgileri kesin gerçek gibi sunma.
 
 NASIL?
-Bu yerin hikayesi veya gelişimi nasıl açıklanabilir? Efsaneleri gerçeklerden açıkça ayır.
+Bu yer adı tarih boyunca nasıl kullanıldı, değişti veya bugünkü biçimine ulaştı? Eski adları, farklı dillerdeki biçimleri ve ses değişimlerini yalnızca doğrulanabiliyorsa yaz. Şehrin siyasi veya ekonomik gelişimini anlatma; yalnızca adın değişimini anlat. Efsaneleri tarihsel gerçeklerden açıkça ayır.
 
-Kurallar: Bilgi uydurma, tarih/kişi/olay icat etme, kaynak yoksa kesin konuşma. Doğrulanmamış bir iddia için "rivayete göre" veya "doğrulanmamıştır" ifadesini kullan. Her başlığın altında yalnızca bir paragraf yaz. Başlıklar dışında giriş, sonuç, kaynakça veya madde işareti ekleme.`
+Kurallar: Şehir tanıtımı yapma. Her paragrafta yer adının kendisiyle bağlantı kur; yer adını açıklamayan bilgileri çıkar. Bilgi uydurma, etimoloji/tarih/kişi/olay icat etme, kaynak yoksa kesin konuşma. Yer adının kökeni bilinmiyorsa bunu açıkça belirt. Doğrulanmamış bir iddia için "rivayete göre" veya "doğrulanmamıştır" ifadesini kullan. Her başlığın altında yalnızca bir paragraf yaz. Başlıklar dışında giriş, sonuç, kaynakça veya madde işareti ekleme.`
             }]
           }]
         })

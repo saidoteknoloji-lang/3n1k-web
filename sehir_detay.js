@@ -9,7 +9,7 @@ const weatherLocation = document.getElementById('weatherLocation');
 const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
-const aiPromptVersion = 'place-name-v3';
+const aiPromptVersion = 'place-name-v4';
 let aiStatusTimers = [];
 
 const firebaseConfig = {
@@ -218,6 +218,10 @@ function openDetailModal(box) {
                     sectionList.appendChild(sectionElement);
                 });
                 modalText.appendChild(sectionList);
+                const sourceNote = document.createElement('p');
+                sourceNote.className = 'ai-source-note';
+                sourceNote.textContent = 'Bu metin yapay zeka tarafından üretilmiştir. Tarihi kaynaklara dayanır, kesinliği tartışılabilir.';
+                modalText.appendChild(sourceNote);
             }
         }
         if (!modalText.childElementCount) {
@@ -232,8 +236,10 @@ function openDetailModal(box) {
 function parseAiSections(text) {
     const pattern = /(?:^|\s)(NEDEN|NASIL|KİM|NE)(?=\s*[?:：-]|\s|$)\s*[?:：-]?\s*/giu;
     const matches = [...text.matchAll(pattern)];
+    const icons = { KİM: '👤', NE: '📖', NEDEN: '❓', NASIL: '🔄' };
     return matches.map((match, index) => {
-        const title = match[1].toUpperCase();
+        const heading = match[1].toUpperCase();
+        const title = `${icons[heading] || ''} ${heading}`.trim();
         const start = match.index + match[0].length;
         const end = matches[index + 1]?.index ?? text.length;
         return { title, text: text.slice(start, end).trim() };

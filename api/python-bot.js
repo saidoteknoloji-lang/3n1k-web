@@ -28,14 +28,23 @@ function firstSentences(text, maxSentences = 3) {
 }
 
 function placeNameSentences(text, placeName, maxSentences = 3) {
-  const sentences = text.replace(/\s+/g, " ").trim().match(/[^.!?]+[.!?]+/g) || [];
+  const cleanedText = text
+    .replace(/={2,6}\s*[^=]+?\s*={2,6}/g, " ")
+    .replace(/\{\{[\s\S]*?\}\}/g, " ")
+    .replace(/\s+/g, " ").trim();
+  const sentences = cleanedText.match(/[^.!?]+[.!?]+/g) || [];
   const name = placeName.toLocaleLowerCase("tr-TR");
-  const keywords = ["adını", "adı", "isim", "ismini", "köken", "etimoloji", "adlandır", "eski adı", "denir", "anlamı"];
+  const keywords = ["adını", "adı", "ismi", "ismini", "köken", "etimoloji", "adlandır", "eski adı", "anlamı", "türemiş"];
   const relevant = sentences.filter(sentence => {
     const normalized = sentence.toLocaleLowerCase("tr-TR");
     return normalized.includes(name) && keywords.some(keyword => normalized.includes(keyword));
   });
   return relevant.slice(0, maxSentences).join(" ").trim();
+}
+
+function extractNameSection(text) {
+  const sectionPattern = /={2,6}\s*(etimoloji|adının kökeni|isminin kökeni|adı)\s*={2,6}([\s\S]*?)(?=\n\s*={2,6}[^=]+?={2,6}|$)/iu;
+  return text.match(sectionPattern)?.[2] || text;
 }
 
 async function fetchWikipedia(placeName) {
@@ -69,7 +78,7 @@ async function fetchWikipedia(placeName) {
   const pageResult = await pageResponse.json();
   const data = pageResult.query?.pages?.[page.pageid];
   if (!data?.extract) return null;
-  const summary = placeNameSentences(data.extract, placeName);
+  const summary = placeNameSentences(extractNameSection(data.extract), placeName);
   if (!summary) return null;
   return {
     title: data.title,

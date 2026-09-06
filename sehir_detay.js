@@ -10,6 +10,7 @@ const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
 const aiPromptVersion = 'place-name-v4';
+const pythonBotVersion = 'source-bot-v1';
 let aiStatusTimers = [];
 
 const firebaseConfig = {
@@ -50,10 +51,36 @@ async function loadSiteOwnerText() {
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
         data.aiPromptVersion = data.aiPromptVersion || '';
         loadWeather(data);
+        if (!data.pythonBot || data.pythonBotVersion !== pythonBotVersion) generatePythonBot();
         return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);
         return {};
+    }
+}
+
+async function generatePythonBot() {
+    if (!placeName || !pythonText) return;
+    pythonText.textContent = 'Wikipedia ve etimoloji kaynakları taranıyor...';
+    try {
+        const response = await fetch(`${window.AI_API_BASE_URL || ''}/api/python-bot`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ yerAdi: placeName })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Python botu çalışmadı.');
+        pythonText.textContent = result.pythonBot || 'Kaynak alınamadı.';
+        if (firebase.apps.length) {
+            await firebase.firestore().collection('yerler').doc(placeId).set({
+                pythonBot: result.pythonBot || 'Kaynak alınamadı.',
+                pythonBotVersion,
+                sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+    } catch (error) {
+        pythonText.textContent = 'Kaynak alınamadı. Bu konu için güvenilir kaynak bulunamadı.';
+        console.error('Python botu oluşturulamadı.', error);
     }
 }
 

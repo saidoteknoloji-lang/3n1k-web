@@ -7,6 +7,7 @@ const pythonSkeleton = document.getElementById('pythonSkeleton');
 const siteOwnerSkeleton = document.getElementById('siteOwnerSkeleton');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
+const aiPromptVersion = 'place-name-v2';
 
 const firebaseConfig = {
     apiKey: 'AIzaSyBvwsj1EJCOzDpi94vUQuFtZgtvVK66OUU',
@@ -44,6 +45,7 @@ async function loadSiteOwnerText() {
         pythonSkeleton.hidden = true;
         pythonText.textContent = data.pythonBot || 'Python botu için henüz veri yok.';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
+        data.aiPromptVersion = data.aiPromptVersion || '';
         return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);
@@ -81,6 +83,7 @@ async function generateAiStory() {
         if (firebase.apps.length) {
             await firebase.firestore().collection('yerler').doc(placeId).set({
                 yapayZeka: result.hikaye,
+                aiPromptVersion,
                 sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
         }
@@ -93,7 +96,7 @@ async function generateAiStory() {
 }
 
 loadSiteOwnerText().then(data => {
-    if (!data.yapayZeka) generateAiStory();
+    if (!data.yapayZeka || data.aiPromptVersion !== aiPromptVersion) generateAiStory();
 });
 
 const detailBoxes = document.querySelectorAll('.detail-box');

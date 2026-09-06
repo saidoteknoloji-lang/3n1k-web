@@ -10,7 +10,7 @@ const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
 const aiPromptVersion = 'place-name-v4';
-const pythonBotVersion = 'source-bot-v1';
+const pythonBotVersion = 'source-bot-v2';
 let aiStatusTimers = [];
 
 const firebaseConfig = {

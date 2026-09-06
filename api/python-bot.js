@@ -27,6 +27,17 @@ function firstSentences(text, maxSentences = 3) {
   return sentences.slice(0, maxSentences).join(" ").trim();
 }
 
+function placeNameSentences(text, placeName, maxSentences = 3) {
+  const sentences = text.replace(/\s+/g, " ").trim().match(/[^.!?]+[.!?]+/g) || [];
+  const name = placeName.toLocaleLowerCase("tr-TR");
+  const keywords = ["adını", "adı", "isim", "ismini", "köken", "etimoloji", "adlandır", "eski adı", "denir", "anlamı"];
+  const relevant = sentences.filter(sentence => {
+    const normalized = sentence.toLocaleLowerCase("tr-TR");
+    return normalized.includes(name) && keywords.some(keyword => normalized.includes(keyword));
+  });
+  return relevant.slice(0, maxSentences).join(" ").trim();
+}
+
 async function fetchWikipedia(placeName) {
   const searchUrl = new URL("https://tr.wikipedia.org/w/api.php");
   searchUrl.search = new URLSearchParams({
@@ -47,7 +58,6 @@ async function fetchWikipedia(placeName) {
   pageUrl.search = new URLSearchParams({
     action: "query",
     prop: "extracts|info",
-    exintro: "1",
     explaintext: "1",
     inprop: "url",
     pageids: page.pageid,
@@ -59,9 +69,11 @@ async function fetchWikipedia(placeName) {
   const pageResult = await pageResponse.json();
   const data = pageResult.query?.pages?.[page.pageid];
   if (!data?.extract) return null;
+  const summary = placeNameSentences(data.extract, placeName);
+  if (!summary) return null;
   return {
     title: data.title,
-    summary: firstSentences(data.extract),
+    summary,
     url: data.fullurl || `https://tr.wikipedia.org/wiki/${encodeURIComponent(data.title.replace(/ /g, "_"))}`
   };
 }

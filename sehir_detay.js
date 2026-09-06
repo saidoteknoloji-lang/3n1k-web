@@ -108,7 +108,6 @@ function closeDetailModal() {
 }
 
 function openDetailModal(box) {
-        box.classList.add('is-expanded');
         modalTitle.textContent = box.querySelector('h2').textContent;
         modalText.textContent = box.querySelector('p').textContent;
         detailModal.classList.add('is-open');
@@ -135,7 +134,7 @@ const commentInput = document.getElementById('commentInput');
 const commentList = document.getElementById('commentList');
 const commentStatus = document.getElementById('commentStatus');
 const commentMessage = document.getElementById('commentMessage');
-const commentLoginButton = document.getElementById('commentLoginButton');
+const commentSubmitButton = commentForm.querySelector('button[type="submit"]');
 const placeId = normalizePlaceId(placeName) || 'isimsiz-yer';
 let currentUser = null;
 let comments = [];
@@ -295,9 +294,8 @@ async function commentAction(comment) {
 commentForm.addEventListener('submit', submitComment);
 firebase.auth().onAuthStateChanged(user => {
     currentUser = user;
-    commentForm.hidden = !user;
-    commentLoginButton.hidden = Boolean(user);
-    if (!user) setCommentMessage('Yorum yapmak için giriş yapmalısın.');
+    commentInput.disabled = !user;
+    commentSubmitButton.disabled = !user;
+    commentMessage.textContent = user ? '' : 'Yorum yapmak için giriş yapmalısın.';
 });
-commentLoginButton.addEventListener('click', () => { window.location.href = 'index.html'; });
 loadComments();

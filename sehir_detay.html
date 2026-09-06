@@ -20,7 +20,7 @@
         .detail-main-box { height: 290px; overflow: hidden; }
         .detail-main-box > p { display: -webkit-box; overflow: hidden; box-orient: vertical; line-clamp: 5; -webkit-box-orient: vertical; -webkit-line-clamp: 5; }
         .detail-box:hover { border-color: #e06d53; box-shadow: 0 8px 20px rgba(26, 37, 54, .12); transform: translateY(-5px); }
-        .detail-box.is-expanded { animation: detail-pop .35s ease both; box-shadow: 0 12px 28px rgba(26, 37, 54, .18); border-color: #e06d53; }
+        .detail-box.is-expanded { animation: none; }
         .detail-box:active { transform: scale(.985); }
         .lower-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
         .comments-box { min-height: 150px; }
@@ -43,6 +43,7 @@
         .comment-form { display: grid; gap: 10px; margin-top: 18px; }
         .comment-form textarea { width: 100%; min-height: 90px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical; font: inherit; }
         .comment-action { width: fit-content; border: 0; border-radius: 6px; padding: 10px 16px; background: #1a2536; color: #fff; cursor: pointer; }
+        .comment-action:disabled { opacity: .5; cursor: not-allowed; }
         .comment-list { display: grid; gap: 14px; margin-top: 20px; }
         .comment-card { position: relative; padding: 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
         .comment-author { display: flex; align-items: center; gap: 10px; color: #1a2536; font-weight: 700; text-decoration: none; }
@@ -57,7 +58,7 @@
         .comment-replies { margin: 12px 0 0 44px; display: grid; gap: 8px; }
         .comment-reply-item { border-left: 2px solid #e06d53; padding-left: 10px; color: #526071; }
         .comment-menu { position: absolute; top: 12px; right: 12px; border: 0; background: transparent; color: #64748b; cursor: pointer; }
-        .comment-status { min-height: 20px; color: #e06d53; margin-top: 8px; }
+        .comment-status { min-height: 20px; color: #b42318; margin-top: 8px; font-size: 12px; }
         .ai-loading { display: inline-flex; align-items: center; gap: 8px; }
         .ai-loading::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #e06d53; animation: loading-bounce .8s ease-in-out infinite alternate; }
         @keyframes detail-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
@@ -123,11 +124,10 @@
                 <small>04</small>
                 <h2>Kullanıcı Yorumları</h2>
                 <p id="commentStatus">Yorumlar yükleniyor...</p>
-                <form id="commentForm" class="comment-form" hidden>
+                <form id="commentForm" class="comment-form">
                     <textarea id="commentInput" maxlength="1000" placeholder="Bu yer hakkında ne düşünüyorsun? @kullaniciadi ile birinden bahsedebilirsin." required></textarea>
                     <button class="comment-action" type="submit">Yorum yap</button>
                 </form>
-                <button id="commentLoginButton" class="comment-action" type="button">Giriş yaparak yorum yaz</button>
                 <p id="commentMessage" class="comment-status" aria-live="polite"></p>
                 <div id="commentList" class="comment-list"></div>
             </article>

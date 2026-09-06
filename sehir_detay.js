@@ -2,6 +2,9 @@ const placeTitle = document.getElementById('placeTitle');
 const siteOwnerText = document.getElementById('siteOwnerText');
 const aiStoryText = document.getElementById('aiStoryText');
 const aiMessage = document.getElementById('aiMessage');
+const pythonText = document.getElementById('pythonText');
+const pythonSkeleton = document.getElementById('pythonSkeleton');
+const siteOwnerSkeleton = document.getElementById('siteOwnerSkeleton');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
 
@@ -36,7 +39,10 @@ async function loadSiteOwnerText() {
         const snapshot = await firebase.firestore().collection('yerler').doc(placeId).get();
         const data = snapshot.exists ? snapshot.data() : {};
         const siteOwnerTextValue = data.siteSahibi || '';
-        if (siteOwnerTextValue) siteOwnerText.textContent = siteOwnerTextValue;
+        siteOwnerSkeleton.hidden = true;
+        siteOwnerText.textContent = siteOwnerTextValue || 'Bu alan için henüz bilgi girilmedi.';
+        pythonSkeleton.hidden = true;
+        pythonText.textContent = data.pythonBot || 'Python botu için henüz veri yok.';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
         return data;
     } catch (error) {
@@ -129,6 +135,7 @@ const commentInput = document.getElementById('commentInput');
 const commentList = document.getElementById('commentList');
 const commentStatus = document.getElementById('commentStatus');
 const commentMessage = document.getElementById('commentMessage');
+const commentLoginButton = document.getElementById('commentLoginButton');
 const placeId = normalizePlaceId(placeName) || 'isimsiz-yer';
 let currentUser = null;
 let comments = [];
@@ -289,6 +296,8 @@ commentForm.addEventListener('submit', submitComment);
 firebase.auth().onAuthStateChanged(user => {
     currentUser = user;
     commentForm.hidden = !user;
+    commentLoginButton.hidden = Boolean(user);
     if (!user) setCommentMessage('Yorum yapmak için giriş yapmalısın.');
 });
+commentLoginButton.addEventListener('click', () => { window.location.href = 'index.html'; });
 loadComments();

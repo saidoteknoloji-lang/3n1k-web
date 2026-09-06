@@ -7,22 +7,33 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
     <style>
-        .detail-page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 48px 0 80px; }
+        .detail-page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 80px; }
+        .detail-hero { min-height: 260px; display: flex; align-items: end; padding: 32px; margin-bottom: 24px; border-radius: 12px; overflow: hidden; background: linear-gradient(90deg, rgba(13,22,34,.86), rgba(13,22,34,.24)), url('1.jpg') center/cover; box-shadow: 0 14px 32px rgba(26,37,54,.18); animation: detail-rise .65s ease both; }
+        .detail-hero .detail-title { color: #fff; margin: 0; text-shadow: 0 3px 18px rgba(0,0,0,.35); }
+        .detail-kicker { display: block; color: #f8b09e; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 10px; }
         .detail-title { color: #1a2536; font-size: clamp(28px, 5vw, 48px); margin-bottom: 34px; animation: detail-rise .65s ease both; }
-        .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+        .detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
         .detail-box { min-height: 190px; background: #fff; border: 1px solid #dedbd4; border-radius: 8px; padding: 24px; box-shadow: 0 4px 14px rgba(26, 37, 54, .06); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; animation: detail-rise .65s ease both; }
         .detail-box:nth-child(2) { animation-delay: .08s; }
         .detail-box:nth-child(3) { animation-delay: .16s; }
         .detail-box:nth-child(4) { animation-delay: .24s; }
-        .detail-main-box { height: 270px; overflow: hidden; }
+        .detail-main-box { height: 290px; overflow: hidden; }
         .detail-main-box > p { display: -webkit-box; overflow: hidden; box-orient: vertical; line-clamp: 5; -webkit-box-orient: vertical; -webkit-line-clamp: 5; }
         .detail-box:hover { border-color: #e06d53; box-shadow: 0 8px 20px rgba(26, 37, 54, .12); transform: translateY(-5px); }
         .detail-box.is-expanded { animation: detail-pop .35s ease both; box-shadow: 0 12px 28px rgba(26, 37, 54, .18); border-color: #e06d53; }
         .detail-box:active { transform: scale(.985); }
-        .comments-box { grid-column: 1 / -1; min-height: 150px; }
+        .lower-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
+        .comments-box { min-height: 150px; }
+        .side-panel { background: #fff; border: 1px solid #dedbd4; border-radius: 8px; padding: 22px; box-shadow: 0 4px 14px rgba(26,37,54,.06); }
+        .side-panel h2 { color: #1a2536; font-size: 18px; margin-bottom: 14px; }
+        .side-panel p { color: #64748b; line-height: 1.6; font-size: 14px; }
+        .side-placeholder { min-height: 90px; display: grid; place-items: center; border: 1px dashed #cbd5e1; border-radius: 6px; color: #94a3b8; font-size: 13px; text-align: center; }
+        .card-icon { display: inline-grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; background: #f1f5f9; color: #526071; font-size: 16px; font-weight: 700; }
+        .read-more { display: inline-block; margin-top: 14px; color: #526071; font-size: 13px; font-weight: 700; }
+        .skeleton-line { height: 10px; width: 78%; margin: 10px 0; border-radius: 5px; background: linear-gradient(90deg,#eef2f5,#dfe6ec,#eef2f5); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
         .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
         .detail-box p { color: #64748b; line-height: 1.6; }
-        .detail-box small { display: inline-block; color: #e06d53; font-weight: 600; margin-bottom: 16px; }
+        .detail-box small { display: none; }
         .detail-modal { position: fixed; inset: 0; z-index: 2500; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(26, 37, 54, .72); }
         .detail-modal.is-open { display: flex; }
         .detail-modal-content { position: relative; width: min(760px, 100%); max-height: min(80vh, 680px); overflow-y: auto; min-height: 360px; padding: 38px; background: #fff; border-radius: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); animation: modal-rise .3s ease both; }
@@ -53,8 +64,9 @@
         @keyframes detail-pop { 0% { transform: scale(.98); } 60% { transform: scale(1.025); } 100% { transform: scale(1); } }
         @keyframes modal-rise { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes loading-bounce { from { transform: translateY(0); opacity: .4; } to { transform: translateY(-5px); opacity: 1; } }
-        @media (max-width: 759px) { .detail-grid { grid-template-columns: 1fr; } .comments-box { grid-column: auto; } .detail-main-box { height: 240px; } }
-        @media (prefers-reduced-motion: reduce) { .detail-title, .detail-box, .detail-modal-content, .ai-loading::after { animation: none; } .detail-box { transition: none; } }
+        @keyframes skeleton-shimmer { to { background-position: -200% 0; } }
+        @media (max-width: 759px) { .detail-grid, .lower-layout { grid-template-columns: 1fr; } .detail-main-box { height: 240px; } .detail-hero { min-height: 220px; padding: 24px; } }
+        @media (prefers-reduced-motion: reduce) { .detail-title, .detail-box, .detail-modal-content, .ai-loading::after, .skeleton-line { animation: none; } .detail-box { transition: none; } }
     </style>
 </head>
 <body>
@@ -73,25 +85,41 @@
     </header>
 
     <main class="detail-page">
-        <h1 id="placeTitle" class="detail-title">Yer adı</h1>
+        <section class="detail-hero">
+            <div>
+                <span class="detail-kicker">Yer adı hafızası</span>
+                <h1 id="placeTitle" class="detail-title">Yer adı</h1>
+            </div>
+        </section>
         <section class="detail-grid" aria-label="Yer detayları">
-            <article class="detail-box detail-main-box">
+            <article id="siteOwnerCard" class="detail-box detail-main-box">
+                <span class="card-icon" aria-hidden="true">01</span>
                 <small>01</small>
                 <h2>Benim Kutum</h2>
-                <p id="siteOwnerText">Bu alan için henüz bilgi girilmedi.</p>
+                <div id="siteOwnerSkeleton" class="skeleton-line" aria-hidden="true"></div>
+                <p id="siteOwnerText">Bilgi yükleniyor...</p>
+                <span class="read-more">Detayları gör</span>
             </article>
-            <article class="detail-box detail-main-box">
+            <article id="pythonCard" class="detail-box detail-main-box">
+                <span class="card-icon" aria-hidden="true">02</span>
                 <small>02</small>
                 <h2>Python Botu</h2>
-                <p>Python botundan gelecek bilgiler burada görünecek.</p>
+                <div id="pythonSkeleton" class="skeleton-line" aria-hidden="true"></div>
+                <p id="pythonText">Bu alan, veri geldiğinde görünecek.</p>
+                <span class="read-more">Detayları gör</span>
             </article>
-            <article class="detail-box detail-main-box">
+            <article id="aiCard" class="detail-box detail-main-box">
+                <span class="card-icon" aria-hidden="true">03</span>
                 <small>03</small>
                 <h2>Yapay Zeka</h2>
                 <p id="aiStoryText" style="white-space: pre-line;">Hikaye hazırlanıyor...</p>
                 <p id="aiMessage" class="comment-status" aria-live="polite"></p>
+                <span class="read-more">Detayları gör</span>
             </article>
+        </section>
+        <section class="lower-layout">
             <article class="detail-box comments-box">
+                <span class="card-icon" aria-hidden="true">04</span>
                 <small>04</small>
                 <h2>Kullanıcı Yorumları</h2>
                 <p id="commentStatus">Yorumlar yükleniyor...</p>
@@ -99,9 +127,15 @@
                     <textarea id="commentInput" maxlength="1000" placeholder="Bu yer hakkında ne düşünüyorsun? @kullaniciadi ile birinden bahsedebilirsin." required></textarea>
                     <button class="comment-action" type="submit">Yorum yap</button>
                 </form>
+                <button id="commentLoginButton" class="comment-action" type="button">Giriş yaparak yorum yaz</button>
                 <p id="commentMessage" class="comment-status" aria-live="polite"></p>
                 <div id="commentList" class="comment-list"></div>
             </article>
+            <aside class="side-panel">
+                <h2>Bu bölgede</h2>
+                <p>Yakında şehir çevresindeki önemli yerler, hava durumu ve popüler mekanlar burada gösterilecek.</p>
+                <div class="side-placeholder">İçerik hazırlanıyor</div>
+            </aside>
         </section>
     </main>
 

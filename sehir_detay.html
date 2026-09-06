@@ -28,6 +28,14 @@
         .side-panel h2 { color: #1a2536; font-size: 18px; margin-bottom: 14px; }
         .side-panel p { color: #64748b; line-height: 1.6; font-size: 14px; }
         .side-placeholder { min-height: 90px; display: grid; place-items: center; border: 1px dashed #cbd5e1; border-radius: 6px; color: #94a3b8; font-size: 13px; text-align: center; }
+        .weather-panel { display: grid; gap: 12px; }
+        .weather-current { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border-radius: 8px; background: #f8fafc; }
+        .weather-temperature { color: #1a2536; font-size: 30px; font-weight: 700; }
+        .weather-description { color: #526071; font-size: 14px; }
+        .weather-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+        .weather-details div { padding: 9px; border: 1px solid #e5e7eb; border-radius: 6px; }
+        .weather-details dt { color: #94a3b8; font-size: 11px; }
+        .weather-details dd { margin: 3px 0 0; color: #526071; font-size: 13px; font-weight: 700; }
         .card-icon { display: inline-grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; background: #f1f5f9; color: #526071; font-size: 16px; font-weight: 700; }
         .read-more { display: inline-block; margin-top: 14px; color: #526071; font-size: 13px; font-weight: 700; }
         .skeleton-line { height: 10px; width: 78%; margin: 10px 0; border-radius: 5px; background: linear-gradient(90deg,#eef2f5,#dfe6ec,#eef2f5); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
@@ -137,8 +145,10 @@
             </article>
             <aside class="side-panel">
                 <h2>Bu bölgede</h2>
-                <p>Yakında şehir çevresindeki önemli yerler, hava durumu ve popüler mekanlar burada gösterilecek.</p>
-                <div class="side-placeholder">İçerik hazırlanıyor</div>
+                <p id="weatherLocation">İl / ilçe hava durumu</p>
+                <div id="weatherPanel" class="weather-panel" aria-live="polite">
+                    <div class="side-placeholder">Hava durumu yükleniyor...</div>
+                </div>
             </aside>
         </section>
     </main>
@@ -155,6 +165,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>window.AI_API_BASE_URL = 'https://3n1k-web.vercel.app';</script>
-    <script src="sehir_detay.js?v=3"></script>
+    <script src="sehir_detay.js?v=4"></script>
 </body>
 </html>

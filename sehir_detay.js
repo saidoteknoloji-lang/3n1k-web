@@ -5,6 +5,8 @@ const aiMessage = document.getElementById('aiMessage');
 const pythonText = document.getElementById('pythonText');
 const pythonSkeleton = document.getElementById('pythonSkeleton');
 const siteOwnerSkeleton = document.getElementById('siteOwnerSkeleton');
+const weatherLocation = document.getElementById('weatherLocation');
+const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
 const aiPromptVersion = 'place-name-v3';
@@ -47,11 +49,76 @@ async function loadSiteOwnerText() {
         pythonText.textContent = data.pythonBot || 'Python botu için henüz veri yok.';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
         data.aiPromptVersion = data.aiPromptVersion || '';
+        loadWeather(data);
         return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);
         return {};
     }
+}
+
+async function loadWeather(placeData) {
+    if (!weatherPanel) return;
+    const il = (placeData.il || '').trim();
+    const ilce = (placeData.ilce || '').trim();
+    const locationName = [ilce, il].filter(Boolean).join(', ') || placeName;
+    weatherLocation.textContent = locationName ? `${locationName} hava durumu` : 'İl / ilçe hava durumu';
+
+    try {
+        let latitude = Number(placeData.enlem);
+        let longitude = Number(placeData.boylam);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            const searchName = [ilce, il].filter(Boolean).join(', ') || placeName;
+            const geocodeResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=tr&format=json`);
+            const geocodeResult = await geocodeResponse.json();
+            const location = geocodeResult.results?.[0];
+            if (!location) throw new Error('İl veya ilçe konumu bulunamadı.');
+            latitude = Number(location.latitude);
+            longitude = Number(location.longitude);
+        }
+
+        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
+        if (!weatherResponse.ok) throw new Error('Hava durumu servisi yanıt vermedi.');
+        const weather = await weatherResponse.json();
+        const current = weather.current;
+        const units = weather.current_units || {};
+        const description = weatherDescription(current.weather_code);
+        weatherPanel.innerHTML = `
+            <div class="weather-current">
+                <div>
+                    <div class="weather-temperature">${Math.round(current.temperature_2m)}${units.temperature_2m || '°C'}</div>
+                    <div class="weather-description">${description}</div>
+                </div>
+                <span aria-hidden="true">${weatherIcon(current.weather_code)}</span>
+            </div>
+            <dl class="weather-details">
+                <div><dt>Nem</dt><dd>${current.relative_humidity_2m}${units.relative_humidity_2m || '%'}</dd></div>
+                <div><dt>Rüzgar</dt><dd>${Math.round(current.wind_speed_10m)} ${units.wind_speed_10m || 'km/h'}</dd></div>
+            </dl>`;
+    } catch (error) {
+        weatherPanel.innerHTML = '<div class="side-placeholder">Hava durumu şu anda alınamadı.</div>';
+        console.error('Hava durumu yüklenemedi.', error);
+    }
+}
+
+function weatherDescription(code) {
+    if (code === 0) return 'Açık';
+    if ([1, 2, 3].includes(code)) return 'Parçalı bulutlu';
+    if ([45, 48].includes(code)) return 'Sisli';
+    if ([51, 53, 55, 56, 57].includes(code)) return 'Çisenti';
+    if ([61, 63, 65, 66, 67].includes(code)) return 'Yağmurlu';
+    if ([71, 73, 75, 77].includes(code)) return 'Karlı';
+    if ([80, 81, 82].includes(code)) return 'Sağanak';
+    if ([95, 96, 99].includes(code)) return 'Gök gürültülü';
+    return 'Değişken';
+}
+
+function weatherIcon(code) {
+    if (code === 0) return '☀';
+    if ([1, 2, 3].includes(code)) return '☁';
+    if ([71, 73, 75, 77].includes(code)) return '❄';
+    if ([95, 96, 99].includes(code)) return '⚡';
+    return '☂';
 }
 
 async function generateAiStory() {

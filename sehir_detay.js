@@ -109,9 +109,44 @@ function closeDetailModal() {
 
 function openDetailModal(box) {
         modalTitle.textContent = box.querySelector('h2').textContent;
-        modalText.textContent = box.querySelector('p').textContent;
+        modalText.replaceChildren();
+        const text = box.querySelector('p').textContent.trim();
+        if (box.id === 'aiCard') {
+            const sections = parseAiSections(text);
+            if (sections.length) {
+                const sectionList = document.createElement('div');
+                sectionList.className = 'ai-detail-sections';
+                sections.forEach(section => {
+                    const sectionElement = document.createElement('section');
+                    sectionElement.className = 'ai-detail-section';
+                    const heading = document.createElement('h3');
+                    heading.textContent = section.title;
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = section.text;
+                    sectionElement.append(heading, paragraph);
+                    sectionList.appendChild(sectionElement);
+                });
+                modalText.appendChild(sectionList);
+            }
+        }
+        if (!modalText.childElementCount) {
+            const paragraph = document.createElement('p');
+            paragraph.textContent = text;
+            modalText.appendChild(paragraph);
+        }
         detailModal.classList.add('is-open');
         detailModal.setAttribute('aria-hidden', 'false');
+}
+
+function parseAiSections(text) {
+    const pattern = /(?:^|\s)(NEDEN|NASIL|KİM|NE)(?=\s*[?:：-]|\s|$)\s*[?:：-]?\s*/giu;
+    const matches = [...text.matchAll(pattern)];
+    return matches.map((match, index) => {
+        const title = match[1].toUpperCase();
+        const start = match.index + match[0].length;
+        const end = matches[index + 1]?.index ?? text.length;
+        return { title, text: text.slice(start, end).trim() };
+    }).filter(section => section.text);
 }
 
 detailBoxes.forEach(box => {

@@ -17,7 +17,7 @@
         .detail-box:nth-child(2) { animation-delay: .08s; }
         .detail-box:nth-child(3) { animation-delay: .16s; }
         .detail-box:nth-child(4) { animation-delay: .24s; }
-        .detail-main-box { height: 290px; overflow: hidden; }
+        .detail-main-box { height: 290px; overflow: hidden; display: flex; flex-direction: column; }
         .detail-main-box > p { display: -webkit-box; overflow: hidden; box-orient: vertical; line-clamp: 5; -webkit-box-orient: vertical; -webkit-line-clamp: 5; }
         .detail-box:hover { border-color: #e06d53; box-shadow: 0 8px 20px rgba(26, 37, 54, .12); transform: translateY(-5px); }
         .detail-box.is-expanded { animation: none; }
@@ -33,12 +33,16 @@
         .skeleton-line { height: 10px; width: 78%; margin: 10px 0; border-radius: 5px; background: linear-gradient(90deg,#eef2f5,#dfe6ec,#eef2f5); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
         .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
         .detail-box p { color: #64748b; line-height: 1.6; }
+        .detail-main-box > p:first-of-type { flex: 1; margin-bottom: 0; }
         .detail-box small { display: none; }
         .detail-modal { position: fixed; inset: 0; z-index: 2500; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(26, 37, 54, .72); }
         .detail-modal.is-open { display: flex; }
         .detail-modal-content { position: relative; width: min(760px, 100%); max-height: min(80vh, 680px); overflow-y: auto; min-height: 360px; padding: 38px; background: #fff; border-radius: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); animation: modal-rise .3s ease both; }
         .detail-modal-content h2 { color: #1a2536; font-size: 30px; margin-bottom: 18px; }
         .detail-modal-content p { color: #526071; line-height: 1.75; font-size: 17px; }
+        .ai-detail-sections { display: grid; gap: 18px; }
+        .ai-detail-section h3 { color: #e06d53; font-size: 14px; letter-spacing: .08em; margin: 0 0 5px; }
+        .ai-detail-section p { margin: 0; }
         .detail-modal-close { position: absolute; top: 12px; right: 16px; border: 0; background: transparent; color: #1a2536; font-size: 24px; cursor: pointer; }
         .comment-form { display: grid; gap: 10px; margin-top: 18px; }
         .comment-form textarea { width: 100%; min-height: 90px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical; font: inherit; }
@@ -96,7 +100,7 @@
             <article id="siteOwnerCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">01</span>
                 <small>01</small>
-                <h2>Benim Kutum</h2>
+                <h2>Benim Bilgim</h2>
                 <div id="siteOwnerSkeleton" class="skeleton-line" aria-hidden="true"></div>
                 <p id="siteOwnerText">Bilgi yükleniyor...</p>
                 <span class="read-more">Detayları gör</span>
@@ -104,7 +108,7 @@
             <article id="pythonCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">02</span>
                 <small>02</small>
-                <h2>Python Botu</h2>
+                <h2>Python Bilgisi</h2>
                 <div id="pythonSkeleton" class="skeleton-line" aria-hidden="true"></div>
                 <p id="pythonText">Bu alan, veri geldiğinde görünecek.</p>
                 <span class="read-more">Detayları gör</span>
@@ -112,7 +116,7 @@
             <article id="aiCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">03</span>
                 <small>03</small>
-                <h2>Yapay Zeka</h2>
+                <h2>Yapay Zeka Analizi</h2>
                 <p id="aiStoryText" style="white-space: pre-line;">Hikaye hazırlanıyor...</p>
                 <p id="aiMessage" class="comment-status" aria-live="polite"></p>
                 <span class="read-more">Detayları gör</span>
@@ -143,7 +147,7 @@
         <article class="detail-modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <button id="modalClose" class="detail-modal-close" type="button" aria-label="Kapat">&times;</button>
             <h2 id="modalTitle"></h2>
-            <p id="modalText"></p>
+            <div id="modalText"></div>
         </article>
     </div>
 
@@ -151,6 +155,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>window.AI_API_BASE_URL = 'https://3n1k-web.vercel.app';</script>
-    <script src="sehir_detay.js?v=2"></script>
+    <script src="sehir_detay.js?v=3"></script>
 </body>
 </html>

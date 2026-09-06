@@ -1,5 +1,11 @@
 export default async function handler(req, res) {
-  const allowedOrigins = ["https://n1k-12d03.web.app", "http://127.0.0.1:5500", "http://localhost:5500"];
+  const allowedOrigins = [
+    "https://n1k-12d03.web.app",
+    "https://3n1k-web.vercel.app",
+    "https://3n1k-web-git-main-saido1.vercel.app",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500"
+  ];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -21,6 +27,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Şehir adı gönderilmedi." });
     }
 
+    const normalizeText = (value) => value.toLocaleLowerCase("tr-TR").normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/ğ/g, "g")
+      .replace(/ü/g, "u").replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c");
+    const locationsResponse = await fetch("https://raw.githubusercontent.com/isubas/iller_ve_ilceler/master/iller_ve_ilceler.json");
+    const locations = await locationsResponse.json();
+    const normalizedPlace = normalizeText(sehirAdi);
+    const knownPlace = Object.values(locations).some(province => {
+      if (normalizeText(province.ad) === normalizedPlace) return true;
+      return (province.ilceler || []).some(district =>
+        normalizeText(`${district.ad}, ${province.ad}`) === normalizedPlace
+      );
+    });
+    if (!knownPlace) {
+      return res.status(404).json({ error: "Üzgünüm, bu yer adı bulunamadı." });
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({ error: "GEMINI_API_KEY Vercel ortam değişkeninde tanımlı değil." });
     }
@@ -33,7 +55,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Türkiye'deki "${sehirAdi}" adlı yer için Türkçe, bilgilendirici ve anlaşılır bir metin hazırla. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver:
+              text: `Türkiye'deki "${sehirAdi}" adlı yer için Türkçe, bilgilendirici ve anlaşılır bir metin hazırla. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver. Başlıkları tek başına bir satırda yaz:
 
 KİM?
 Bu yerle ilişkili kişi, topluluk veya kültür kimdir? Yeterli doğrulanmış bilgi yoksa "Bu konuda doğrulanmış bilgi bulunamadı." yaz.

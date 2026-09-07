@@ -1,0 +1,16 @@
+# Yer Adları
+
+Yer Adları, Türkiye'deki il, ilçe ve diğer yer adlarının anlamını, kökenini ve kültürel hafızasını paylaşan bir web sitesidir.
+
+## Önemli sayfalar
+
+- Ana sayfa: https://3n1k-web.vercel.app/
+- Hakkımızda: https://3n1k-web.vercel.app/hakkimizda.html
+- Yer detayı: https://3n1k-web.vercel.app/sehir_detay.html?q=ADANA
+
+## İçerik ilkeleri
+
+- Yapay zeka çıktıları kaynak bilgisiyle birlikte değerlendirilmelidir.
+- Mitolojik anlatılar tarihî bilgilerden ayrı tutulur.
+- Güvenilir kaynak bulunamadığında bu açıkça belirtilir.
+- Kullanıcı katkıları kesin tarihî gerçek olarak kabul edilmemelidir.

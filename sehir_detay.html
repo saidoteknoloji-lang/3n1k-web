@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Şehir Detayı | Yer Adları</title>
+    <meta name="description" content="Türkiye'deki yer adının anlamını, kökenini, tarihini ve kullanıcı katkılarını keşfedin.">
+    <link rel="canonical" href="https://3n1k-web.vercel.app/sehir_detay.html">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
     <style>
@@ -17,7 +19,7 @@
         .detail-box:nth-child(2) { animation-delay: .08s; }
         .detail-box:nth-child(3) { animation-delay: .16s; }
         .detail-box:nth-child(4) { animation-delay: .24s; }
-        .detail-main-box { height: 290px; overflow: hidden; display: flex; flex-direction: column; }
+        .detail-main-box { height: 290px; overflow: hidden; }
         .detail-main-box > p { display: -webkit-box; overflow: hidden; box-orient: vertical; line-clamp: 5; -webkit-box-orient: vertical; -webkit-line-clamp: 5; }
         .detail-box:hover { border-color: #e06d53; box-shadow: 0 8px 20px rgba(26, 37, 54, .12); transform: translateY(-5px); }
         .detail-box.is-expanded { animation: none; }
@@ -28,31 +30,17 @@
         .side-panel h2 { color: #1a2536; font-size: 18px; margin-bottom: 14px; }
         .side-panel p { color: #64748b; line-height: 1.6; font-size: 14px; }
         .side-placeholder { min-height: 90px; display: grid; place-items: center; border: 1px dashed #cbd5e1; border-radius: 6px; color: #94a3b8; font-size: 13px; text-align: center; }
-        .weather-panel { display: grid; gap: 12px; }
-        .weather-current { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border-radius: 8px; background: #f8fafc; }
-        .weather-temperature { color: #1a2536; font-size: 30px; font-weight: 700; }
-        .weather-description { color: #526071; font-size: 14px; }
-        .weather-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
-        .weather-details div { padding: 9px; border: 1px solid #e5e7eb; border-radius: 6px; }
-        .weather-details dt { color: #94a3b8; font-size: 11px; }
-        .weather-details dd { margin: 3px 0 0; color: #526071; font-size: 13px; font-weight: 700; }
         .card-icon { display: inline-grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 50%; background: #f1f5f9; color: #526071; font-size: 16px; font-weight: 700; }
         .read-more { display: inline-block; margin-top: 14px; color: #526071; font-size: 13px; font-weight: 700; }
         .skeleton-line { height: 10px; width: 78%; margin: 10px 0; border-radius: 5px; background: linear-gradient(90deg,#eef2f5,#dfe6ec,#eef2f5); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
         .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
         .detail-box p { color: #64748b; line-height: 1.6; }
-        .detail-main-box > p:first-of-type { flex: 1; margin-bottom: 0; }
-        #pythonText { white-space: pre-line; }
         .detail-box small { display: none; }
         .detail-modal { position: fixed; inset: 0; z-index: 2500; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(26, 37, 54, .72); }
         .detail-modal.is-open { display: flex; }
         .detail-modal-content { position: relative; width: min(760px, 100%); max-height: min(80vh, 680px); overflow-y: auto; min-height: 360px; padding: 38px; background: #fff; border-radius: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); animation: modal-rise .3s ease both; }
         .detail-modal-content h2 { color: #1a2536; font-size: 30px; margin-bottom: 18px; }
         .detail-modal-content p { color: #526071; line-height: 1.75; font-size: 17px; }
-        .ai-detail-sections { display: grid; gap: 18px; }
-        .ai-detail-section h3 { color: #e06d53; font-size: 14px; letter-spacing: .08em; margin: 0 0 5px; }
-        .ai-detail-section p { margin: 0; }
-        .ai-source-note { margin: 24px 0 0; padding-top: 14px; border-top: 1px solid #e5e7eb; color: #94a3b8; font-size: 12px !important; line-height: 1.5 !important; }
         .detail-modal-close { position: absolute; top: 12px; right: 16px; border: 0; background: transparent; color: #1a2536; font-size: 24px; cursor: pointer; }
         .comment-form { display: grid; gap: 10px; margin-top: 18px; }
         .comment-form textarea { width: 100%; min-height: 90px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical; font: inherit; }
@@ -110,7 +98,7 @@
             <article id="siteOwnerCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">01</span>
                 <small>01</small>
-                <h2>Benim Bilgim</h2>
+                <h2>Benim Kutum</h2>
                 <div id="siteOwnerSkeleton" class="skeleton-line" aria-hidden="true"></div>
                 <p id="siteOwnerText">Bilgi yükleniyor...</p>
                 <span class="read-more">Detayları gör</span>
@@ -118,7 +106,7 @@
             <article id="pythonCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">02</span>
                 <small>02</small>
-                <h2>Python Bilgisi</h2>
+                <h2>Python Botu</h2>
                 <div id="pythonSkeleton" class="skeleton-line" aria-hidden="true"></div>
                 <p id="pythonText">Bu alan, veri geldiğinde görünecek.</p>
                 <span class="read-more">Detayları gör</span>
@@ -126,9 +114,9 @@
             <article id="aiCard" class="detail-box detail-main-box">
                 <span class="card-icon" aria-hidden="true">03</span>
                 <small>03</small>
-                <h2>Yapay Zeka Analizi</h2>
+                <h2>Yapay Zeka</h2>
                 <p id="aiStoryText" style="white-space: pre-line;">Hikaye hazırlanıyor...</p>
-                <p id="aiMessage" class="comment-status" aria-live="polite" hidden></p>
+                <p id="aiMessage" class="comment-status" aria-live="polite"></p>
                 <span class="read-more">Detayları gör</span>
             </article>
         </section>
@@ -147,10 +135,8 @@
             </article>
             <aside class="side-panel">
                 <h2>Bu bölgede</h2>
-                <p id="weatherLocation">İl / ilçe hava durumu</p>
-                <div id="weatherPanel" class="weather-panel" aria-live="polite">
-                    <div class="side-placeholder">Hava durumu yükleniyor...</div>
-                </div>
+                <p>Yakında şehir çevresindeki önemli yerler, hava durumu ve popüler mekanlar burada gösterilecek.</p>
+                <div class="side-placeholder">İçerik hazırlanıyor</div>
             </aside>
         </section>
     </main>
@@ -159,7 +145,7 @@
         <article class="detail-modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <button id="modalClose" class="detail-modal-close" type="button" aria-label="Kapat">&times;</button>
             <h2 id="modalTitle"></h2>
-            <div id="modalText"></div>
+            <p id="modalText"></p>
         </article>
     </div>
 
@@ -167,6 +153,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>window.AI_API_BASE_URL = 'https://3n1k-web.vercel.app';</script>
-    <script src="sehir_detay.js?v=5"></script>
+    <script src="sehir_detay.js?v=2"></script>
 </body>
 </html>

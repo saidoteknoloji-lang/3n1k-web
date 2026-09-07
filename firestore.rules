@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+
+    match /yerler/{placeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+      match /yorumlar/{commentId} {
+        allow read: if true;
+        allow create: if signedIn() && request.resource.data.kullaniciId == request.auth.uid;
+        allow update, delete: if signedIn() && resource.data.kullaniciId == request.auth.uid;
+      }
+    }
+
+    match /kullanicilar/{userId} {
+      allow read: if true;
+      allow create, update, delete: if signedIn() && request.auth.uid == userId;
+      match /bildirimler/{notificationId} {
+        allow read, update, delete: if signedIn() && request.auth.uid == userId;
+        allow create: if signedIn();
+      }
+    }
+
+    match /sikayetler/{reportId} {
+      allow create: if signedIn() && request.resource.data.bildirenId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

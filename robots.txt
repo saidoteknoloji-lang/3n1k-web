@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /profil.html
+Disallow: /.firebase/
+Disallow: /api/
+
+Sitemap: https://3n1k-web.vercel.app/sitemap.xml

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yer Adları - Türkiye'nin Yer İsimleri Hafızası</title>
+    <meta name="description" content="Türkiye'deki il, ilçe ve yer adlarının anlamlarını, kökenlerini ve kültürel hafızasını keşfedin.">
+    <link rel="canonical" href="https://3n1k-web.vercel.app/">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,13 +57,15 @@
         <div class="hero-content" id="heroContent">
             <h2>Neredeyim? Hikayesini Keşfet!</h2>
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="İl, ilçe veya köy adı yazın..." autocomplete="off">
-                <button id="searchBtn">Ara</button>
-                
-                <!-- Arama Sonuçları Dropdown -->
-                <div class="search-results-box" id="searchResults">
-                    <!-- Sonuçlar JS ile buraya eklenecek -->
+                <div class="search-input-wrap">
+                    <input type="text" id="searchInput" placeholder="İl, ilçe veya köy adı yazın..." autocomplete="off">
+                    <!-- Arama Sonuçları Dropdown -->
+                    <div class="search-results-box" id="searchResults">
+                        <!-- Sonuçlar JS ile buraya eklenecek -->
+                    </div>
+                    <p id="searchMessage" class="search-message" aria-live="polite"></p>
                 </div>
+                <button id="searchBtn">Ara</button>
             </div>
         </div>
     </section>

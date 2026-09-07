@@ -41,7 +41,7 @@
             <h1 class="admin-title">Admin girişi</h1>
             <p class="admin-help">Yer bilgisi eklemek için admin kimliğiyle giriş yapın.</p>
             <form id="adminLoginForm" class="auth-form">
-                <label>Admin ID<input id="adminId" type="text" autocomplete="username" required></label>
+                <label>Admin e-posta<input id="adminEmail" type="email" value="saidoteknoloji@gmail.com" autocomplete="username" required></label>
                 <label>Şifre<input id="adminPassword" type="password" autocomplete="current-password" required></label>
                 <button class="admin-button" type="submit">Panele gir</button>
             </form>
@@ -74,6 +74,7 @@
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="admin.js"></script>
 </body>

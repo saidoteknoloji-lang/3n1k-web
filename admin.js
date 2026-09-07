@@ -10,6 +10,7 @@ const firebaseConfig = {
 
 const ADMIN_ID = 'WY8LkCQSyvctpjwTWi0kMLm5MYh1';
 const ADMIN_PASSWORD = 'deneme123';
+const ADMIN_EMAIL = 'saidoteknoloji@gmail.com';
 const adminSessionKey = 'yer-adlari-admin-session';
 
 firebase.initializeApp(firebaseConfig);
@@ -79,21 +80,39 @@ function normalizeId(value) {
         .replace(/^-|-$/g, '').slice(0, 120);
 }
 
-if (sessionStorage.getItem(adminSessionKey) === 'true') showEntryPanel();
+firebase.auth().onAuthStateChanged(user => {
+    if (user && user.uid === ADMIN_ID) {
+        sessionStorage.setItem(adminSessionKey, 'true');
+        showEntryPanel();
+    } else {
+        sessionStorage.removeItem(adminSessionKey);
+        showLoginPanel();
+    }
+});
 
-loginForm.addEventListener('submit', event => {
+loginForm.addEventListener('submit', async event => {
     event.preventDefault();
-    const id = document.getElementById('adminId').value.trim();
+    const email = document.getElementById('adminEmail').value.trim();
     const password = document.getElementById('adminPassword').value;
 
-    if (id !== ADMIN_ID || password !== ADMIN_PASSWORD) {
-        loginMessage.textContent = 'Admin ID veya şifre hatalı.';
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+        loginMessage.textContent = 'Admin e-posta veya şifre hatalı.';
         return;
     }
 
-    sessionStorage.setItem(adminSessionKey, 'true');
-    loginMessage.textContent = '';
-    showEntryPanel();
+    loginMessage.textContent = 'Firebase hesabına giriş yapılıyor...';
+    try {
+        const credential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        if (credential.user.uid !== ADMIN_ID) {
+            await firebase.auth().signOut();
+            throw new Error('Bu Firebase hesabı admin hesabı değil.');
+        }
+        sessionStorage.setItem(adminSessionKey, 'true');
+        loginMessage.textContent = '';
+        showEntryPanel();
+    } catch (error) {
+        loginMessage.textContent = error.message || 'Firebase girişi başarısız.';
+    }
 });
 
 placeForm.addEventListener('submit', async event => {
@@ -143,6 +162,7 @@ placeForm.addEventListener('submit', async event => {
 
 logoutButton.addEventListener('click', () => {
     sessionStorage.removeItem(adminSessionKey);
+    firebase.auth().signOut();
     showLoginPanel();
     loginForm.reset();
 });

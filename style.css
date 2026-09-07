@@ -156,8 +156,14 @@ nav ul li a:hover {
     position: relative;
 }
 
+.search-input-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .search-container input {
-    flex: 1;
+    width: 100%;
     min-height: 54px;
     padding: 15px 20px;
     border: 1px solid rgba(255,255,255,.2);
@@ -178,7 +184,8 @@ nav ul li a:hover {
     color: white;
     border: none;
     min-height: 54px;
-    padding: 0 28px;
+    flex: 0 0 94px;
+    padding: 0 16px;
     border-radius: 12px;
     font-weight: bold;
     font-size: 16px;
@@ -204,7 +211,7 @@ nav ul li a:hover {
     position: absolute;
     top: calc(100% - 1px);
     left: 0;
-    width: 100%; 
+    width: 100%;
     background-color: #fff;
     border: 1px solid #d2d6dc;
     border-top-left-radius: 0;
@@ -212,10 +219,22 @@ nav ul li a:hover {
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
     max-height: 250px;
-    overflow-y: auto;
+    overflow: hidden auto;
     z-index: 2000;
     display: none;
     box-shadow: 0 12px 25px rgba(26,37,54,.14);
+    text-align: left;
+}
+
+.search-message {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    min-height: 20px;
+    margin: 0;
+    color: #d1d5db;
+    font-size: 13px;
     text-align: left;
 }
 

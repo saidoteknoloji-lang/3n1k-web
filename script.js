@@ -22,6 +22,7 @@ heroSection.style.background = `linear-gradient(${darkFilter}, ${darkFilter}), u
 // 2. Arama Butonu Etkileşimi (Kararma ve Büyüme)
 const searchBtn = document.getElementById('searchBtn');
 const searchInput = document.getElementById('searchInput');
+const searchMessage = document.getElementById('searchMessage');
 const title = heroContent.querySelector('h2');
 
 const provinceDataUrl = 'https://raw.githubusercontent.com/isubas/iller_ve_ilceler/master/iller_ve_ilceler.json';
@@ -93,13 +94,16 @@ searchBtn.addEventListener('click', () => {
         searchBtn.classList.remove('btn-clicked');
     }, 300);
 
-    // Eğer bir şey yazılmışsa doğrudan detay sayfasına yönlendir (dropdown gösterme yok)
-    if (searchInput.value.trim().length > 0) {
-        const q = encodeURIComponent(searchInput.value.trim());
-        saveSearchedPlace(searchInput.value.trim()).finally(() => {
-            window.location.href = `sehir_detay.html?q=${q}`;
-        });
+    const searchedPlace = searchInput.value.trim();
+    if (!searchedPlace) {
+        searchMessage.textContent = 'Lütfen bir yer adı yazın.';
+        return;
     }
+    searchMessage.textContent = '';
+    const q = encodeURIComponent(searchedPlace);
+    saveSearchedPlace(searchedPlace).finally(() => {
+        window.location.href = `sehir_detay.html?q=${q}`;
+    });
 });
 
 searchInput.addEventListener('input', () => renderSuggestions(searchInput.value));
@@ -217,7 +221,7 @@ if (loginForm) {
                 authMsg.textContent = 'Giriş başarılı.';
             })
             .catch(err => {
-                authMsg.textContent = err.message || 'Giriş başarısız.';
+                authMsg.textContent = getAuthErrorMessage(err);
             });
     });
 }
@@ -245,9 +249,20 @@ if (registerForm) {
                 authMsg.textContent = 'Kayıt başarılı. Giriş yapıldı.';
             })
             .catch(err => {
-                authMsg.textContent = err.message || 'Kayıt başarısız.';
+                authMsg.textContent = getAuthErrorMessage(err);
             });
     });
+}
+
+function getAuthErrorMessage(error) {
+    const messages = {
+        'auth/invalid-credential': 'E-posta veya şifre hatalı.',
+        'auth/user-not-found': 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.',
+        'auth/wrong-password': 'Şifre hatalı.',
+        'auth/invalid-email': 'Geçerli bir e-posta adresi girin.',
+        'auth/too-many-requests': 'Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.'
+    };
+    return messages[error.code] || error.message || 'İşlem başarısız.';
 }
 
 // Firebase Web App configuration

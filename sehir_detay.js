@@ -9,9 +9,6 @@ const weatherLocation = document.getElementById('weatherLocation');
 const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
-const aiPromptVersion = 'place-name-v4';
-const pythonBotVersion = 'source-bot-v3';
-let aiStatusTimers = [];
 
 const firebaseConfig = {
     apiKey: 'AIzaSyBvwsj1EJCOzDpi94vUQuFtZgtvVK66OUU',
@@ -47,11 +44,10 @@ async function loadSiteOwnerText() {
         siteOwnerSkeleton.hidden = true;
         siteOwnerText.textContent = siteOwnerTextValue || 'Bu alan için henüz bilgi girilmedi.';
         pythonSkeleton.hidden = true;
-        pythonText.textContent = data.pythonBot || 'Python botu için henüz veri yok.';
+        pythonText.textContent = data.pythonBot || 'Kaynaklar taranıyor...';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
-        data.aiPromptVersion = data.aiPromptVersion || '';
         loadWeather(data);
-        if (!data.pythonBot || data.pythonBotVersion !== pythonBotVersion) generatePythonBot();
+        if (!data.pythonBot) generatePythonBot();
         return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);
@@ -61,7 +57,6 @@ async function loadSiteOwnerText() {
 
 async function generatePythonBot() {
     if (!placeName || !pythonText) return;
-    pythonText.textContent = 'Wikipedia ve etimoloji kaynakları taranıyor...';
     try {
         const response = await fetch(`${window.AI_API_BASE_URL || ''}/api/python-bot`, {
             method: 'POST',
@@ -70,14 +65,7 @@ async function generatePythonBot() {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Python botu çalışmadı.');
-        pythonText.textContent = result.pythonBot || 'Kaynak alınamadı.';
-        if (firebase.apps.length) {
-            await firebase.firestore().collection('yerler').doc(placeId).set({
-                pythonBot: result.pythonBot || 'Kaynak alınamadı.',
-                pythonBotVersion,
-                sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        }
+        pythonText.textContent = result.pythonBot || 'Kaynak bulunamadı.';
     } catch (error) {
         pythonText.textContent = 'Kaynak alınamadı. Bu konu için güvenilir kaynak bulunamadı.';
         console.error('Python botu oluşturulamadı.', error);
@@ -90,38 +78,23 @@ async function loadWeather(placeData) {
     const ilce = (placeData.ilce || '').trim();
     const locationName = [ilce, il].filter(Boolean).join(', ') || placeName;
     weatherLocation.textContent = locationName ? `${locationName} hava durumu` : 'İl / ilçe hava durumu';
-
     try {
         let latitude = Number(placeData.enlem);
         let longitude = Number(placeData.boylam);
         if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-            const searchName = [ilce, il].filter(Boolean).join(', ') || placeName;
-            const geocodeResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=tr&format=json`);
-            const geocodeResult = await geocodeResponse.json();
-            const location = geocodeResult.results?.[0];
+            const queryName = [ilce, il].filter(Boolean).join(', ') || placeName;
+            const geocode = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(queryName)}&count=1&language=tr&format=json`);
+            const result = await geocode.json();
+            const location = result.results?.[0];
             if (!location) throw new Error('İl veya ilçe konumu bulunamadı.');
             latitude = Number(location.latitude);
             longitude = Number(location.longitude);
         }
-
-        const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
-        if (!weatherResponse.ok) throw new Error('Hava durumu servisi yanıt vermedi.');
-        const weather = await weatherResponse.json();
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`);
+        if (!response.ok) throw new Error('Hava durumu servisi yanıt vermedi.');
+        const weather = await response.json();
         const current = weather.current;
-        const units = weather.current_units || {};
-        const description = weatherDescription(current.weather_code);
-        weatherPanel.innerHTML = `
-            <div class="weather-current">
-                <div>
-                    <div class="weather-temperature">${Math.round(current.temperature_2m)}${units.temperature_2m || '°C'}</div>
-                    <div class="weather-description">${description}</div>
-                </div>
-                <span aria-hidden="true">${weatherIcon(current.weather_code)}</span>
-            </div>
-            <dl class="weather-details">
-                <div><dt>Nem</dt><dd>${current.relative_humidity_2m}${units.relative_humidity_2m || '%'}</dd></div>
-                <div><dt>Rüzgar</dt><dd>${Math.round(current.wind_speed_10m)} ${units.wind_speed_10m || 'km/h'}</dd></div>
-            </dl>`;
+        weatherPanel.innerHTML = `<div class="weather-current"><div><div class="weather-temperature">${Math.round(current.temperature_2m)}°C</div><div class="weather-description">${weatherDescription(current.weather_code)}</div></div><span>${weatherIcon(current.weather_code)}</span></div><dl class="weather-details"><div><dt>Nem</dt><dd>${current.relative_humidity_2m}%</dd></div><div><dt>Rüzgar</dt><dd>${Math.round(current.wind_speed_10m)} km/h</dd></div></dl>`;
     } catch (error) {
         weatherPanel.innerHTML = '<div class="side-placeholder">Hava durumu şu anda alınamadı.</div>';
         console.error('Hava durumu yüklenemedi.', error);
@@ -133,19 +106,17 @@ function weatherDescription(code) {
     if ([1, 2, 3].includes(code)) return 'Parçalı bulutlu';
     if ([45, 48].includes(code)) return 'Sisli';
     if ([51, 53, 55, 56, 57].includes(code)) return 'Çisenti';
-    if ([61, 63, 65, 66, 67].includes(code)) return 'Yağmurlu';
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'Yağmurlu';
     if ([71, 73, 75, 77].includes(code)) return 'Karlı';
-    if ([80, 81, 82].includes(code)) return 'Sağanak';
     if ([95, 96, 99].includes(code)) return 'Gök gürültülü';
     return 'Değişken';
 }
 
 function weatherIcon(code) {
     if (code === 0) return '☀';
-    if ([1, 2, 3].includes(code)) return '☁';
     if ([71, 73, 75, 77].includes(code)) return '❄';
     if ([95, 96, 99].includes(code)) return '⚡';
-    return '☂';
+    return '☁';
 }
 
 async function generateAiStory() {
@@ -158,7 +129,8 @@ async function generateAiStory() {
         aiMessage.textContent = 'AI sunucusu henüz bağlanmadı. Vercel API adresi gerekli.';
         return;
     }
-    startAiStatusMessages();
+    aiMessage.classList.add('ai-loading');
+    aiMessage.textContent = 'Hikaye oluşturuluyor...';
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
             method: 'POST',
@@ -172,46 +144,28 @@ async function generateAiStory() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
-        stopAiStatusMessages('Aha, bitti.');
+        aiMessage.textContent = 'Hikaye oluşturuldu.';
+        aiMessage.classList.remove('ai-loading');
         if (firebase.apps.length) {
-            await firebase.firestore().collection('yerler').doc(placeId).set({
-                yapayZeka: result.hikaye,
-                aiPromptVersion,
-                sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+            try {
+                await firebase.firestore().collection('yerler').doc(placeId).set({
+                    yapayZeka: result.hikaye,
+                    sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (saveError) {
+                console.warn('AI metni gösterildi ancak Firebase kaydı yapılamadı.', saveError);
+            }
         }
     } catch (error) {
-        stopAiStatusMessages(error.message || 'Hikaye oluşturulamadı.', false);
+        aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
+        aiMessage.classList.remove('ai-loading');
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
     }
 }
 
-function startAiStatusMessages() {
-    stopAiStatusMessages();
-    aiMessage.hidden = false;
-    aiMessage.classList.add('ai-loading');
-    aiMessage.textContent = 'Kaynaklar taranıyor...';
-    const statuses = [
-        [3000, 'Metin yazılıyor...'],
-        [6000, 'Metin düzenleniyor...'],
-        [9000, 'Neredeyse hazır...']
-    ];
-    aiStatusTimers = statuses.map(([delay, message]) => setTimeout(() => {
-        aiMessage.textContent = message;
-    }, delay));
-}
-
-function stopAiStatusMessages(message, hide = true) {
-    aiStatusTimers.forEach(timer => clearTimeout(timer));
-    aiStatusTimers = [];
-    aiMessage.textContent = message || '';
-    aiMessage.classList.remove('ai-loading');
-    aiMessage.hidden = hide;
-}
-
 loadSiteOwnerText().then(data => {
-    if (!data.yapayZeka || data.aiPromptVersion !== aiPromptVersion) generateAiStory();
+    if (!data.yapayZeka) generateAiStory();
 });
 
 const detailBoxes = document.querySelectorAll('.detail-box');
@@ -227,50 +181,9 @@ function closeDetailModal() {
 
 function openDetailModal(box) {
         modalTitle.textContent = box.querySelector('h2').textContent;
-        modalText.replaceChildren();
-        const text = box.querySelector('p').textContent.trim();
-        if (box.id === 'aiCard') {
-            const sections = parseAiSections(text);
-            if (sections.length) {
-                const sectionList = document.createElement('div');
-                sectionList.className = 'ai-detail-sections';
-                sections.forEach(section => {
-                    const sectionElement = document.createElement('section');
-                    sectionElement.className = 'ai-detail-section';
-                    const heading = document.createElement('h3');
-                    heading.textContent = section.title;
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = section.text;
-                    sectionElement.append(heading, paragraph);
-                    sectionList.appendChild(sectionElement);
-                });
-                modalText.appendChild(sectionList);
-                const sourceNote = document.createElement('p');
-                sourceNote.className = 'ai-source-note';
-                sourceNote.textContent = 'Bu metin yapay zeka tarafından üretilmiştir. Tarihi kaynaklara dayanır, kesinliği tartışılabilir.';
-                modalText.appendChild(sourceNote);
-            }
-        }
-        if (!modalText.childElementCount) {
-            const paragraph = document.createElement('p');
-            paragraph.textContent = text;
-            modalText.appendChild(paragraph);
-        }
+        modalText.textContent = box.querySelector('p').textContent;
         detailModal.classList.add('is-open');
         detailModal.setAttribute('aria-hidden', 'false');
-}
-
-function parseAiSections(text) {
-    const pattern = /(?:^|\s)(NEDEN|NASIL|KİM|NE)(?=\s*[?:：-]|\s|$)\s*[?:：-]?\s*/giu;
-    const matches = [...text.matchAll(pattern)];
-    const icons = { KİM: '👤', NE: '📖', NEDEN: '❓', NASIL: '🔄' };
-    return matches.map((match, index) => {
-        const heading = match[1].toUpperCase();
-        const title = `${icons[heading] || ''} ${heading}`.trim();
-        const start = match.index + match[0].length;
-        const end = matches[index + 1]?.index ?? text.length;
-        return { title, text: text.slice(start, end).trim() };
-    }).filter(section => section.text);
 }
 
 detailBoxes.forEach(box => {

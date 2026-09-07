@@ -156,7 +156,9 @@ placeForm.addEventListener('submit', async event => {
         placeForm.reset();
     } catch (error) {
         console.error(error);
-        saveMessage.textContent = 'Kayıt başarısız. Firestore kurallarını kontrol edin.';
+        saveMessage.textContent = error.code === 'permission-denied'
+            ? 'Kayıt reddedildi: Firebase hesabının UID\'si admin UID ile eşleşmiyor.'
+            : `Kayıt başarısız: ${error.message || 'Firestore hatası'}`;
     }
 });
 

@@ -9,6 +9,7 @@ const weatherLocation = document.getElementById('weatherLocation');
 const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
+let aiStatusTimers = [];
 
 const firebaseConfig = {
     apiKey: 'AIzaSyBvwsj1EJCOzDpi94vUQuFtZgtvVK66OUU',
@@ -130,8 +131,7 @@ async function generateAiStory() {
         aiMessage.textContent = 'AI sunucusu henüz bağlanmadı. Vercel API adresi gerekli.';
         return;
     }
-    aiMessage.classList.add('ai-loading');
-    aiMessage.textContent = 'Hikaye oluşturuluyor...';
+    startAiStatusMessages();
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
             method: 'POST',
@@ -145,14 +145,33 @@ async function generateAiStory() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
-        aiMessage.textContent = 'Hikaye oluşturuldu.';
-        aiMessage.classList.remove('ai-loading');
+        stopAiStatusMessages('Hazır.');
     } catch (error) {
-        aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
-        aiMessage.classList.remove('ai-loading');
+        stopAiStatusMessages(error.message || 'Hikaye oluşturulamadı.');
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
     }
+}
+
+function startAiStatusMessages() {
+    stopAiStatusMessages();
+    aiMessage.classList.add('ai-loading');
+    aiMessage.textContent = 'Kaynaklar taranıyor...';
+    aiStatusTimers = [
+        [2200, 'Özet analiz ediliyor...'],
+        [4400, 'Metin yazıya dökülüyor...'],
+        [6600, 'Bilgiler düzenleniyor...'],
+        [8800, 'Son kontroller yapılıyor...']
+    ].map(([delay, message]) => setTimeout(() => {
+        aiMessage.textContent = message;
+    }, delay));
+}
+
+function stopAiStatusMessages(message) {
+    aiStatusTimers.forEach(timer => clearTimeout(timer));
+    aiStatusTimers = [];
+    aiMessage.textContent = message || '';
+    aiMessage.classList.remove('ai-loading');
 }
 
 loadSiteOwnerText().then(data => {
@@ -171,10 +190,43 @@ function closeDetailModal() {
 }
 
 function openDetailModal(box) {
-        modalTitle.textContent = box.querySelector('h2').textContent;
-        modalText.textContent = box.querySelector('p').textContent;
-        detailModal.classList.add('is-open');
-        detailModal.setAttribute('aria-hidden', 'false');
+    modalTitle.textContent = box.querySelector('h2').textContent;
+    const text = box.querySelector('p').textContent.trim();
+    modalText.replaceChildren();
+    const sections = parseDetailSections(text);
+    if (sections.length) {
+        const sectionList = document.createElement('div');
+        sectionList.className = 'detail-sections';
+        sections.forEach(section => {
+            const sectionElement = document.createElement('section');
+            sectionElement.className = 'detail-section';
+            const heading = document.createElement('h3');
+            heading.textContent = section.title;
+            const paragraph = document.createElement('p');
+            paragraph.textContent = section.text;
+            sectionElement.append(heading, paragraph);
+            sectionList.appendChild(sectionElement);
+        });
+        modalText.appendChild(sectionList);
+    } else {
+        const paragraph = document.createElement('p');
+        paragraph.textContent = text;
+        modalText.appendChild(paragraph);
+    }
+    detailModal.classList.add('is-open');
+    detailModal.setAttribute('aria-hidden', 'false');
+}
+
+function parseDetailSections(text) {
+    const pattern = /(?:^|\s)(NEDEN|NASIL|KİM|NE)(?=\s*[?:：-]|\s|$)\s*[?:：-]?\s*/giu;
+    const matches = [...text.matchAll(pattern)];
+    const icons = { KİM: '👤', NE: '📖', NEDEN: '❓', NASIL: '🔄' };
+    return matches.map((match, index) => {
+        const heading = match[1].toLocaleUpperCase('tr-TR');
+        const start = match.index + match[0].length;
+        const end = matches[index + 1]?.index ?? text.length;
+        return { title: `${icons[heading] || ''} ${heading}`.trim(), text: text.slice(start, end).trim() };
+    });
 }
 
 detailBoxes.forEach(box => {

@@ -44,6 +44,9 @@
         .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
         .detail-box p { color: #64748b; line-height: 1.6; }
         #pythonText { white-space: pre-line; }
+        .detail-sections { display: grid; gap: 18px; }
+        .detail-section h3 { margin: 0 0 6px; color: #e06d53; font-size: 14px; letter-spacing: .08em; }
+        .detail-section p { margin: 0; white-space: pre-line; }
         .detail-box small { display: none; }
         .detail-modal { position: fixed; inset: 0; z-index: 2500; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(26, 37, 54, .72); }
         .detail-modal.is-open { display: flex; }
@@ -156,7 +159,7 @@
         <article class="detail-modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <button id="modalClose" class="detail-modal-close" type="button" aria-label="Kapat">&times;</button>
             <h2 id="modalTitle"></h2>
-            <p id="modalText"></p>
+            <div id="modalText"></div>
         </article>
     </div>
 
@@ -164,6 +167,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>window.AI_API_BASE_URL = 'https://3n1k-web.vercel.app';</script>
-    <script src="sehir_detay.js?v=5"></script>
+    <script src="sehir_detay.js?v=6"></script>
 </body>
 </html>

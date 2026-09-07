@@ -46,8 +46,9 @@ async function loadSiteOwnerText() {
         pythonSkeleton.hidden = true;
         pythonText.textContent = data.pythonBot || 'Kaynaklar taranıyor...';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
+        const hasPythonSections = /\bNE\b[\s\S]*\bNEDEN\b[\s\S]*\bKİM\b[\s\S]*\bNASIL\b/i.test(data.pythonBot || '');
+        if (!hasPythonSections) generatePythonBot();
         loadWeather(data);
-        if (!data.pythonBot) generatePythonBot();
         return data;
     } catch (error) {
         console.error('Site sahibinin bilgisi yüklenemedi.', error);

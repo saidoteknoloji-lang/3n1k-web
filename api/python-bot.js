@@ -27,6 +27,29 @@ function firstSentences(text, maxSentences = 3) {
   return sentences.slice(0, maxSentences).join(" ").trim();
 }
 
+function buildSections(sources) {
+  const sections = { NE: [], NEDEN: [], 'KİM': [], NASIL: [] };
+  const keywords = {
+    NE: ['adı', 'ismi', 'isim', 'köken', 'anlam', 'türemiş'],
+    NEDEN: ['nedeni', 'sebebi', 'dolayı', 'amacıyla', 'veril'],
+    'KİM': ['tarafından', 'koyan', 'veren', 'halk', 'topluluk', 'kabile'],
+    NASIL: ['dönüş', 'değiş', 'kullanıl', 'adlandır', 'eski', 'zamanla']
+  };
+  sources.forEach(source => {
+    const sentences = source.summary.match(/[^.!?]+[.!?]+/g) || [source.summary];
+    sentences.forEach(sentence => {
+      const normalized = sentence.toLocaleLowerCase('tr-TR');
+      Object.entries(keywords).forEach(([section, words]) => {
+        if (words.some(word => normalized.includes(word))) sections[section].push(sentence.trim());
+      });
+    });
+  });
+  return Object.fromEntries(Object.entries(sections).map(([section, sentences]) => [
+    section,
+    [...new Set(sentences)].slice(0, 2).join(' ')
+  ]));
+}
+
 function placeNameSentences(text, placeName, maxSentences = 3) {
   const cleanedText = text
     .replace(/={2,6}\s*[^=]+?\s*={2,6}/g, " ")
@@ -169,15 +192,15 @@ export default async function handler(req, res) {
     if (wikipedia.status === "fulfilled" && wikipedia.value) sources.push({ type: "Wikipedia", ...wikipedia.value });
     if (etymology.status === "fulfilled" && etymology.value) sources.push(etymology.value);
 
-    const summaryParts = sources.map(source => `${source.summary} [${source.type}]`);
-    const summary = summaryParts.length
-      ? summaryParts.join(" ")
-      : "Bu konu için güvenilir kaynak bulunamadı.";
+    const sections = buildSections(sources);
+    const sectionText = ['NE', 'NEDEN', 'KİM', 'NASIL']
+      .map(section => `${section}\n${sections[section]}`)
+      .join('\n\n');
     const sourceLines = sources.length
       ? sources.map(source => `• ${source.type} – ${source.title || placeName}`).join("\n")
       : "• Kaynak alınamadı";
     return res.status(200).json({
-      pythonBot: `📌 Python Bot Özeti\n\n${summary}\n\nKaynaklar:\n${sourceLines}`,
+      pythonBot: `📌 Python Bot Özeti\n\n${sectionText}\n\nKaynaklar:\n${sourceLines}`,
       sources
     });
   } catch (error) {

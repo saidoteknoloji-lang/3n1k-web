@@ -76,14 +76,17 @@ async function fetchWikipedia(placeName) {
     action: "query",
     list: "search",
     srsearch: `\"${placeName}\"` ,
-    srlimit: "1",
+    srlimit: "5",
     format: "json",
     origin: "*"
   });
   const searchResponse = await fetch(searchUrl, { headers: { "User-Agent": "YerAdlariPythonBot/1.0" } });
   if (!searchResponse.ok) throw new Error("Wikipedia araması başarısız.");
   const searchResult = await searchResponse.json();
-  const page = searchResult.query?.search?.[0];
+  const searchPages = searchResult.query?.search || [];
+  const normalizedPlaceName = placeName.toLocaleLowerCase('tr-TR');
+  const page = searchPages.find(item => item.title.toLocaleLowerCase('tr-TR') === normalizedPlaceName)
+    || searchPages[0];
   if (!page) return null;
 
   const pageUrl = new URL("https://tr.wikipedia.org/w/api.php");
@@ -101,7 +104,8 @@ async function fetchWikipedia(placeName) {
   const pageResult = await pageResponse.json();
   const data = pageResult.query?.pages?.[page.pageid];
   if (!data?.extract) return null;
-  const summary = placeNameSentences(extractNameSection(data.extract), placeName);
+  const nameSection = extractNameSection(data.extract);
+  const summary = placeNameSentences(nameSection, placeName) || firstSentences(nameSection, 3);
   if (!summary) return null;
   return {
     title: data.title,

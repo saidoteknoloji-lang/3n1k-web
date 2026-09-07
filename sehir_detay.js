@@ -147,16 +147,6 @@ async function generateAiStory() {
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         aiMessage.textContent = 'Hikaye oluşturuldu.';
         aiMessage.classList.remove('ai-loading');
-        if (firebase.apps.length) {
-            try {
-                await firebase.firestore().collection('yerler').doc(placeId).set({
-                    yapayZeka: result.hikaye,
-                    sonGuncelleme: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            } catch (saveError) {
-                console.warn('AI metni gösterildi ancak Firebase kaydı yapılamadı.', saveError);
-            }
-        }
     } catch (error) {
         aiMessage.textContent = error.message || 'Hikaye oluşturulamadı.';
         aiMessage.classList.remove('ai-loading');

@@ -1,4 +1,5 @@
 const allowedOrigins = [
+  "https://3n1k.com.tr",
   "https://n1k-12d03.web.app",
   "https://3n1k-web.vercel.app",
   "https://3n1k-web-git-main-saido1.vercel.app",

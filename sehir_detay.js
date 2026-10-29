@@ -79,6 +79,20 @@ function renderPythonBot(text) {
     }
 }
 
+function getGeminiQuotaMessage(retryAfterSeconds) {
+    const seconds = Number(retryAfterSeconds);
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+        return 'Yapay zeka günlük kullanım kotasına ulaştı. Lütfen daha sonra tekrar deneyin.';
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.ceil((seconds % 3600) / 60);
+    const wait = hours
+        ? `${hours} saat${minutes ? ` ${minutes} dakika` : ''}`
+        : `${Math.max(minutes, 1)} dakika`;
+    return `Yapay zeka günlük kullanım kotasına ulaştı. Yaklaşık ${wait} sonra tekrar deneyin.`;
+}
+
 async function loadSiteOwnerText() {
     if (!placeName || !siteOwnerText) return {};
 
@@ -112,6 +126,7 @@ async function generatePythonBot() {
             body: JSON.stringify({ yerAdi: placeName })
         });
         const result = await response.json();
+        if (response.status === 429) throw new Error(getGeminiQuotaMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
         if (!response.ok) throw new Error(result.error || result.detail || 'Python botu çalışmadı.');
         if (!result.pythonBot) throw new Error('Bot boş yanıt verdi.');
         renderPythonBot(result.pythonBot);
@@ -190,6 +205,7 @@ async function generateAiStory() {
             throw new Error('AI sunucusu bulunamadı. Vercel API adresini ayarlayın.');
         }
         const result = await response.json();
+        if (response.status === 429) throw new Error(getGeminiQuotaMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         stopAiStatusMessages('Hazır.');

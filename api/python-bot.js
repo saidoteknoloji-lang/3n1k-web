@@ -1,3 +1,5 @@
+import { getGeminiQuotaRetryAfterSeconds } from "./gemini-quota.js";
+
 const allowedOrigins = [
   "https://3n1k.com.tr",
   "https://n1k-12d03.web.app",
@@ -116,7 +118,15 @@ Kaynaklar:\n${JSON.stringify(evidence)}`
     throw new Error(`Gemini geçersiz yanıt verdi (HTTP ${response.status}).`);
   }
   if (!response.ok) {
-    throw new Error(result.error?.message || `Gemini isteği başarısız (HTTP ${response.status}).`);
+    const detail = result.error?.message || `Gemini isteği başarısız (HTTP ${response.status}).`;
+    const retryAfterSeconds = getGeminiQuotaRetryAfterSeconds(response, detail);
+    if (retryAfterSeconds !== null || response.status === 429) {
+      const error = new Error("Gemini günlük kullanım kotası doldu.");
+      error.statusCode = 429;
+      error.retryAfterSeconds = retryAfterSeconds;
+      throw error;
+    }
+    throw new Error(detail);
   }
 
   const rawSections = result.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("").trim() || "";
@@ -334,8 +344,15 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("Python bot kaynak hatası:", error);
-    return res.status(502).json({
-      error: "Yer adı bilgisi güvenilir kaynaklarla doğrulanamadı. Lütfen daha sonra tekrar deneyin.",
+    const statusCode = error?.statusCode === 429 ? 429 : 502;
+    if (statusCode === 429 && error.retryAfterSeconds) {
+      res.setHeader("Retry-After", String(error.retryAfterSeconds));
+    }
+    return res.status(statusCode).json({
+      error: statusCode === 429
+        ? "Yapay zeka günlük kullanım kotasına ulaştı. Lütfen daha sonra tekrar deneyin."
+        : "Yer adı bilgisi güvenilir kaynaklarla doğrulanamadı. Lütfen daha sonra tekrar deneyin.",
+      ...(statusCode === 429 && error.retryAfterSeconds ? { retryAfterSeconds: error.retryAfterSeconds } : {}),
       detail: error instanceof Error ? error.message : "Bilinmeyen kaynak veya AI hatası."
     });
   }

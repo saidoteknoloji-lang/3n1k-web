@@ -1,3 +1,5 @@
+import { getGeminiQuotaRetryAfterSeconds } from "./gemini-quota.js";
+
 export default async function handler(req, res) {
   const allowedOrigins = [
     "https://3n1k.com.tr",
@@ -87,7 +89,17 @@ Kurallar: Şehir tanıtımı yapma. Her paragrafta yer adının kendisiyle bağl
       });
     }
     if (!response.ok) {
-      return res.status(502).json({ error: "Gemini isteği başarısız.", detail: result.error?.message || "Bilinmeyen Gemini hatası." });
+      const detail = result.error?.message || "Bilinmeyen Gemini hatası.";
+      const retryAfterSeconds = getGeminiQuotaRetryAfterSeconds(response, detail);
+      if (retryAfterSeconds !== null || response.status === 429) {
+        if (retryAfterSeconds) res.setHeader("Retry-After", String(retryAfterSeconds));
+        return res.status(429).json({
+          error: "Yapay zeka günlük kullanım kotasına ulaştı. Lütfen daha sonra tekrar deneyin.",
+          ...(retryAfterSeconds ? { retryAfterSeconds } : {}),
+          detail
+        });
+      }
+      return res.status(502).json({ error: "Gemini isteği başarısız.", detail });
     }
     const hikaye = result.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("").trim();
     return res.status(200).json({ hikaye: hikaye || "Gemini boş yanıt döndürdü." });

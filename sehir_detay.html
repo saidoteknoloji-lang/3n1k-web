@@ -43,7 +43,9 @@
         .skeleton-line { height: 10px; width: 78%; margin: 10px 0; border-radius: 5px; background: linear-gradient(90deg,#eef2f5,#dfe6ec,#eef2f5); background-size: 200% 100%; animation: skeleton-shimmer 1.2s linear infinite; }
         .detail-box h2 { color: #1a2536; font-size: 21px; margin-bottom: 12px; }
         .detail-box p { color: #64748b; line-height: 1.6; }
-        #pythonText { white-space: pre-line; }
+        #pythonText { max-height: 132px; overflow: hidden; white-space: pre-line; }
+        #pythonText > p { margin: 0 0 12px; }
+        #pythonText > p > strong { color: #1a2536; }
         .detail-sections { display: grid; gap: 18px; }
         .detail-section h3 { margin: 0 0 6px; color: #e06d53; font-size: 14px; letter-spacing: .08em; }
         .detail-section p { margin: 0; white-space: pre-line; }
@@ -120,7 +122,7 @@
                 <small>02</small>
                 <h2>Python Botu</h2>
                 <div id="pythonSkeleton" class="skeleton-line" aria-hidden="true"></div>
-                <p id="pythonText">Bu alan, veri geldiğinde görünecek.</p>
+                <div id="pythonText">Bu alan, veri geldiğinde görünecek.</div>
                 <span class="read-more">Detayları gör</span>
             </article>
             <article id="aiCard" class="detail-box detail-main-box">
@@ -167,6 +169,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>window.AI_API_BASE_URL = 'https://3n1k-web.vercel.app';</script>
-    <script src="sehir_detay.js?v=6"></script>
+    <script src="sehir_detay.js?v=7"></script>
 </body>
 </html>

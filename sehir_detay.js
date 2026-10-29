@@ -33,6 +33,52 @@ function normalizePlaceId(value) {
         .replace(/^-|-$/g, '').slice(0, 120);
 }
 
+function parsePythonBotSections(text) {
+    const source = String(text || '');
+    const content = source.replace(/^\s*(?:📌\s*)?Python Bot Özeti\s*/i, '');
+    const sourceSection = content.search(/(?:^|\n)\s*Kaynaklar\s*:/i);
+    const answerText = sourceSection >= 0 ? content.slice(0, sourceSection) : content;
+    const matches = [...answerText.matchAll(/(^|[\s.,;:!?])((?:NEDEN|NASIL|NE|KİM)\?)\s*/gu)]
+        .map(match => ({
+            index: match.index,
+            bodyStart: match.index + match[1].length + match[2].length,
+            heading: match[2].slice(0, -1).toLocaleUpperCase('tr-TR')
+        }));
+    const sections = new Map();
+    matches.forEach((match, index) => {
+        const bodyEnd = matches[index + 1]?.index ?? answerText.length;
+        sections.set(match.heading, answerText.slice(match.bodyStart, bodyEnd).trim());
+    });
+    return { sections, sources: sourceSection >= 0 ? content.slice(sourceSection).trim() : '' };
+}
+
+function hasCompletePythonBot(text) {
+    const { sections, sources } = parsePythonBotSections(text);
+    const answers = ['NE', 'NEDEN', 'KİM', 'NASIL'].map(heading => sections.get(heading) || '');
+    const unavailableAnswer = /bu (?:bölüm|konu) için doğrulanmış bilgi bulunamadı|doğrulanmış kaynaklarda belirtilmiyor/i;
+    const substantiveAnswers = answers.filter(answer => answer.length >= 20 && !unavailableAnswer.test(answer));
+    return answers.every(answer => answer.length >= 20)
+        && substantiveAnswers.length >= 2
+        && /https?:\/\//i.test(sources);
+}
+
+function renderPythonBot(text) {
+    const { sections, sources } = parsePythonBotSections(text);
+    pythonText.replaceChildren();
+    ['NE', 'NEDEN', 'KİM', 'NASIL'].forEach(heading => {
+        const paragraph = document.createElement('p');
+        const label = document.createElement('strong');
+        label.textContent = `${heading}?`;
+        paragraph.append(label, document.createElement('br'), document.createTextNode(sections.get(heading) || 'Bu bölüm için doğrulanmış bilgi bulunamadı.'));
+        pythonText.appendChild(paragraph);
+    });
+    if (sources) {
+        const sourceParagraph = document.createElement('p');
+        sourceParagraph.textContent = sources;
+        pythonText.appendChild(sourceParagraph);
+    }
+}
+
 async function loadSiteOwnerText() {
     if (!placeName || !siteOwnerText) return {};
 
@@ -45,10 +91,10 @@ async function loadSiteOwnerText() {
         siteOwnerSkeleton.hidden = true;
         siteOwnerText.textContent = siteOwnerTextValue || 'Bu alan için henüz bilgi girilmedi.';
         pythonSkeleton.hidden = true;
-        pythonText.textContent = data.pythonBot || 'Kaynaklar taranıyor...';
+        if (hasCompletePythonBot(data.pythonBot)) renderPythonBot(data.pythonBot);
+        else pythonText.textContent = 'Eksik bilgi yenileniyor; güvenilir kaynaklar aranıyor...';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
-        const hasPythonSections = /\bNE\b[\s\S]*\bNEDEN\b[\s\S]*\bKİM\b[\s\S]*\bNASIL\b/i.test(data.pythonBot || '');
-        if (!hasPythonSections) generatePythonBot();
+        if (!hasCompletePythonBot(data.pythonBot)) generatePythonBot();
         loadWeather(data);
         return data;
     } catch (error) {
@@ -66,10 +112,11 @@ async function generatePythonBot() {
             body: JSON.stringify({ yerAdi: placeName })
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Python botu çalışmadı.');
-        pythonText.textContent = result.pythonBot || 'Kaynak bulunamadı.';
+        if (!response.ok) throw new Error(result.error || result.detail || 'Python botu çalışmadı.');
+        if (!result.pythonBot) throw new Error('Bot boş yanıt verdi.');
+        renderPythonBot(result.pythonBot);
     } catch (error) {
-        pythonText.textContent = 'Kaynak alınamadı. Bu konu için güvenilir kaynak bulunamadı.';
+        pythonText.textContent = error.message || 'Kaynak alınamadı. Lütfen daha sonra tekrar deneyin.';
         console.error('Python botu oluşturulamadı.', error);
     }
 }
@@ -191,8 +238,34 @@ function closeDetailModal() {
 
 function openDetailModal(box) {
     modalTitle.textContent = box.querySelector('h2').textContent;
-    const text = box.querySelector('p').textContent.trim();
+    const text = box.id === 'pythonCard'
+        ? (pythonText.innerText || pythonText.textContent).trim()
+        : box.querySelector('p').textContent.trim();
     modalText.replaceChildren();
+    if (box.id === 'pythonCard') {
+        const { sections, sources } = parsePythonBotSections(text);
+        const sectionList = document.createElement('div');
+        sectionList.className = 'detail-sections';
+        ['NE', 'NEDEN', 'KİM', 'NASIL'].forEach(heading => {
+            const sectionElement = document.createElement('section');
+            sectionElement.className = 'detail-section';
+            const label = document.createElement('h3');
+            label.textContent = `${heading}?`;
+            const paragraph = document.createElement('p');
+            paragraph.textContent = sections.get(heading) || 'Bu bölüm için doğrulanmış bilgi bulunamadı.';
+            sectionElement.append(label, paragraph);
+            sectionList.appendChild(sectionElement);
+        });
+        modalText.appendChild(sectionList);
+        if (sources) {
+            const sourceParagraph = document.createElement('p');
+            sourceParagraph.textContent = sources;
+            modalText.appendChild(sourceParagraph);
+        }
+        detailModal.classList.add('is-open');
+        detailModal.setAttribute('aria-hidden', 'false');
+        return;
+    }
     const sections = parseDetailSections(text);
     if (sections.length) {
         const sectionList = document.createElement('div');

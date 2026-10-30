@@ -1,21 +1,6 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-
-const allowedOrigins = [
-  "https://3n1k.com.tr",
-  "https://n1k-12d03.web.app",
-  "https://3n1k-web.vercel.app",
-  "https://3n1k-web-git-main-saido1.vercel.app",
-  "http://127.0.0.1:5500",
-  "http://localhost:5500"
-];
-
-function setCors(req, res) {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-}
+import { setCorsHeaders } from "./cors.js";
 
 const FETCH_TIMEOUT_MS = 12000;
 const PYTHON_BOT_CACHE_VERSION = 3;
@@ -179,7 +164,7 @@ async function generatePlaceNameBot(placeName) {
 }
 
 export default async function handler(req, res) {
-  setCors(req, res);
+  setCorsHeaders(req, res);
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Sadece POST istekleri desteklenir." });
 

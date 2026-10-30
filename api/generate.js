@@ -1,3 +1,5 @@
+import { setCorsHeaders } from "./cors.js";
+
 const DEFAULT_EVREN_BASE_URL = "https://evren-llmapi.ssyz.org.tr";
 const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash";
 const EVREN_API_TIMEOUT_MS = 60000;
@@ -17,20 +19,7 @@ function getRetryAfterSeconds(response) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigins = [
-    "https://3n1k.com.tr",
-    "https://n1k-12d03.web.app",
-    "https://3n1k-web.vercel.app",
-    "https://3n1k-web-git-main-saido1.vercel.app",
-    "http://127.0.0.1:5500",
-    "http://localhost:5500"
-  ];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();

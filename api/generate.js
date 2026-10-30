@@ -165,9 +165,11 @@ Kurallar: Şehir tanıtımı yapma. Yer adının kökeni bilinmiyorsa bunu açı
     }
     const hikaye = extractStoryText(result);
     if (!hikaye) {
+      const detail = getEmptyResponseDetail(result);
+      console.error("Evren API yanıtında çıkarılabilir metin yok:", detail);
       return res.status(502).json({
         error: "Evren API yanıtında hikâye metni bulunamadı.",
-        detail: getEmptyResponseDetail(result)
+        detail
       });
     }
 

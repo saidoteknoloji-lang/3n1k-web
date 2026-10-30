@@ -219,7 +219,10 @@ async function generateAiStory() {
         }
         const result = await response.json();
         if (response.status === 429) throw new Error(getAiRateLimitMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
-        if (!response.ok) throw new Error(result.error || result.detail || 'Hikaye oluşturulamadı.');
+        if (!response.ok) {
+            if (result.detail) console.error('AI API yanıt ayrıntısı:', result.detail);
+            throw new Error(result.error || result.detail || 'Hikaye oluşturulamadı.');
+        }
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         stopAiStatusMessages(result.savedToFirebase === false
             ? `Hikaye oluşturuldu fakat Firebase kaydı başarısız: ${result.saveError || 'Vercel Firebase ayarlarını kontrol edin.'}`

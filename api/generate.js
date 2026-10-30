@@ -1,5 +1,5 @@
 const DEFAULT_EVREN_BASE_URL = "https://evren-llmapi.ssyz.org.tr";
-const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash[1m]";
+const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash";
 const EVREN_API_TIMEOUT_MS = 60000;
 
 function getErrorMessage(result, fallback) {
@@ -44,22 +44,6 @@ export default async function handler(req, res) {
     const sehirAdi = typeof req.body?.sehirAdi === "string" ? req.body.sehirAdi.trim() : "";
     if (!sehirAdi || sehirAdi.length > 160) {
       return res.status(400).json({ error: "Şehir adı gönderilmedi." });
-    }
-
-    const normalizeText = (value) => value.toLocaleLowerCase("tr-TR").normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i").replace(/ğ/g, "g")
-      .replace(/ü/g, "u").replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c");
-    const locationsResponse = await fetch("https://raw.githubusercontent.com/isubas/iller_ve_ilceler/master/iller_ve_ilceler.json");
-    const locations = await locationsResponse.json();
-    const normalizedPlace = normalizeText(sehirAdi);
-    const knownPlace = Object.values(locations).some(province => {
-      if (normalizeText(province.ad) === normalizedPlace) return true;
-      return (province.ilceler || []).some(district =>
-        normalizeText(`${district.ad}, ${province.ad}`) === normalizedPlace
-      );
-    });
-    if (!knownPlace) {
-      return res.status(404).json({ error: "Üzgünüm, bu yer adı bulunamadı." });
     }
 
     const apiKey = process.env.ANTHROPIC_AUTH_TOKEN;

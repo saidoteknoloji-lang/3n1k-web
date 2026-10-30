@@ -1,4 +1,20 @@
-import { getGeminiQuotaRetryAfterSeconds } from "./gemini-quota.js";
+const DEFAULT_EVREN_BASE_URL = "https://evren-llmapi.ssyz.org.tr";
+const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash[1m]";
+const EVREN_API_TIMEOUT_MS = 60000;
+
+function getErrorMessage(result, fallback) {
+  const error = result?.error;
+  if (typeof error === "string") return error;
+  if (typeof error?.message === "string") return error.message;
+  if (typeof result?.detail === "string") return result.detail;
+  if (typeof result?.message === "string") return result.message;
+  return fallback;
+}
+
+function getRetryAfterSeconds(response) {
+  const value = Number(response.headers.get("retry-after"));
+  return Number.isFinite(value) && value > 0 ? Math.ceil(value) : null;
+}
 
 export default async function handler(req, res) {
   const allowedOrigins = [
@@ -46,19 +62,31 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Üzgünüm, bu yer adı bulunamadı." });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "GEMINI_API_KEY Vercel ortam değişkeninde tanımlı değil." });
+    const apiKey = process.env.ANTHROPIC_AUTH_TOKEN;
+    if (!apiKey) {
+      return res.status(500).json({ error: "ANTHROPIC_AUTH_TOKEN Vercel ortam değişkeninde tanımlı değil." });
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`,
-      {
+    const baseUrl = (process.env.ANTHROPIC_BASE_URL || DEFAULT_EVREN_BASE_URL).replace(/\/+$/, "");
+    const model = process.env.ANTHROPIC_MODEL || DEFAULT_EVREN_MODEL;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), EVREN_API_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(`${baseUrl}/v1/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01"
+        },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Türkiye'deki "${sehirAdi}" yer adının kökenini ve adlandırılma hikâyesini araştıran Türkçe, bilgilendirici ve anlaşılır kısa bir metin hazırla. Şehrin genel turistik tanıtımını, doğal güzelliklerini veya genel tarihini anlatma; yalnızca yer adının anlamına, dilsel kökenine, kimler tarafından kullanıldığına, neden verildiğine ve zaman içinde nasıl değiştiğine odaklan. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında 3-5 cümleyi geçmeyen tek bir paragrafla ver. Başlıkları tek başına bir satırda yaz:
+          model,
+          max_tokens: 1400,
+          system: `Türkiye'deki yer adlarının kökenini anlatan Türkçe bir yazım yardımcısısın. Kesin olmayan etimolojileri kesin gerçek gibi sunma; bilgi uydurma. Kullanıcıdan gelen yer adı için yalnızca adın anlamı, kökeni, adlandırılma nedeni ve tarih içindeki biçimleri hakkında yaz. Şehir tanıtımı, turistik yerler, nüfus ve genel şehir tarihiyle konuyu doldurma. Yanıtı yalnızca aşağıdaki dört başlık ve paragraflarla ver; giriş, sonuç veya kaynakça ekleme. Her başlık altında 3-5 cümleyi geçmeyen tek paragraf kullan. Güvenilir bilgi yoksa bunu açıkça belirt.`,
+          messages: [{
+            role: "user",
+            content: `Türkiye'deki "${sehirAdi}" yer adının anlamı, kökeni ve adlandırılma hikâyesini hazırla. Yanıtı tam olarak aşağıdaki dört başlıkla ve her başlığın altında tek bir paragrafla ver. Başlıkları tek başına bir satırda yaz:
 
 KİM?
 Bu yer adını ilk kullanan, veren veya yaygınlaştıran kişi, topluluk, halk ya da uygarlık kimdir? Şehirde yaşamış tüm uygarlıkları listeleme; yalnızca adın kökeniyle doğrudan ilişkili aktörü anlat. Kişi veya topluluk adıyla ilgili güvenilir kanıt yoksa bunu açıkça belirt ve genel nüfus bilgisini yazma. Yeterli doğrulanmış bilgi yoksa "Bu konuda doğrulanmış bilgi bulunamadı." yaz.
@@ -72,43 +100,52 @@ Bu ad neden verilmiş olabilir? Adın bir kişi, topluluk, dil, coğrafi özelli
 NASIL?
 Bu yer adı tarih boyunca nasıl kullanıldı, değişti veya bugünkü biçimine ulaştı? Eski adları, farklı dillerdeki biçimleri ve ses değişimlerini yalnızca doğrulanabiliyorsa yaz. Şehrin siyasi veya ekonomik gelişimini anlatma; yalnızca adın değişimini anlat. Efsaneleri tarihsel gerçeklerden açıkça ayır.
 
-Kurallar: Şehir tanıtımı yapma. Her paragrafta yer adının kendisiyle bağlantı kur; yer adını açıklamayan bilgileri çıkar. Her bölümü kısa tut ve 3-5 cümleyi geçme. Bilgi uydurma, etimoloji/tarih/kişi/olay icat etme, kaynak yoksa kesin konuşma. Yer adının kökeni bilinmiyorsa bunu açıkça belirt. Doğrulanmamış bir iddia için "rivayete göre" veya "doğrulanmamıştır" ifadesini kullan. Her başlığın altında yalnızca bir paragraf yaz. Başlıklar dışında giriş, sonuç, kaynakça veya madde işareti ekleme.`
-            }]
+Kurallar: Şehir tanıtımı yapma. Yer adının kökeni bilinmiyorsa bunu açıkça belirt. Doğrulanmamış etimolojileri, tarihleri ve kişileri kesin bilgi gibi sunma. Her başlığın altında yalnızca tek paragraf yaz; başlıklar dışında giriş, sonuç veya kaynakça ekleme.`,
           }]
         })
-      }
-    );
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
     const rawResponse = await response.text();
     let result;
     try {
       result = JSON.parse(rawResponse);
     } catch {
       return res.status(502).json({
-        error: "Google Gemini geçersiz bir yanıt döndürdü.",
-        detail: `Google HTTP ${response.status}: ${rawResponse.slice(0, 180)}`
+        error: "Evren API geçersiz bir yanıt döndürdü.",
+        detail: `Evren HTTP ${response.status}: ${rawResponse.slice(0, 180)}`
       });
     }
     if (!response.ok) {
-      const detail = result.error?.message || "Bilinmeyen Gemini hatası.";
-      const retryAfterSeconds = getGeminiQuotaRetryAfterSeconds(response, detail);
-      if (retryAfterSeconds !== null || response.status === 429) {
+      const detail = getErrorMessage(result, `Evren HTTP ${response.status}.`);
+      if (response.status === 429) {
+        const retryAfterSeconds = getRetryAfterSeconds(response);
         if (retryAfterSeconds) res.setHeader("Retry-After", String(retryAfterSeconds));
         return res.status(429).json({
-          error: "Yapay zeka günlük kullanım kotasına ulaştı. Lütfen daha sonra tekrar deneyin.",
+          error: "Evren API istek sınırına ulaştı. Lütfen daha sonra tekrar deneyin.",
           ...(retryAfterSeconds ? { retryAfterSeconds } : {}),
           detail
         });
       }
-      return res.status(502).json({ error: "Gemini isteği başarısız.", detail });
+      return res.status(502).json({ error: "Evren API isteği başarısız.", detail });
     }
-    const hikaye = result.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("").trim();
-    return res.status(200).json({ hikaye: hikaye || "Gemini boş yanıt döndürdü." });
+    const hikaye = Array.isArray(result.content)
+      ? result.content.filter(block => block.type === "text").map(block => block.text || "").join("\n").trim()
+      : "";
+    if (!hikaye) {
+      return res.status(502).json({ error: "Evren API boş metin yanıtı döndürdü." });
+    }
+    return res.status(200).json({ hikaye });
 
   } catch (error) {
-    console.error("Gemini API Hatası:", error);
+    console.error("Evren API hatası:", error);
     return res.status(502).json({
-      error: "Gemini hikaye servisi cevap vermedi.",
-      detail: error instanceof Error ? error.message : "Bilinmeyen Gemini hatası."
+      error: error?.name === "AbortError"
+        ? "Evren API zaman aşımına uğradı."
+        : "Evren hikaye servisi cevap vermedi.",
+      detail: error instanceof Error ? error.message : "Bilinmeyen Evren API hatası."
     });
   }
 }

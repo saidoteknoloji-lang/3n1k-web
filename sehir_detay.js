@@ -9,6 +9,8 @@ const weatherLocation = document.getElementById('weatherLocation');
 const weatherPanel = document.getElementById('weatherPanel');
 const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
+const PYTHON_BOT_CACHE_VERSION = 3;
+const PYTHON_BOT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 let aiStatusTimers = [];
 
 const firebaseConfig = {
@@ -55,11 +57,16 @@ function parsePythonBotSections(text) {
 function hasCompletePythonBot(text) {
     const { sections, sources } = parsePythonBotSections(text);
     const answers = ['NE', 'NEDEN', 'KİM', 'NASIL'].map(heading => sections.get(heading) || '');
-    const unavailableAnswer = /bu (?:bölüm|konu) için doğrulanmış bilgi bulunamadı|doğrulanmış kaynaklarda belirtilmiyor/i;
-    const substantiveAnswers = answers.filter(answer => answer.length >= 20 && !unavailableAnswer.test(answer));
     return answers.every(answer => answer.length >= 20)
-        && substantiveAnswers.length >= 2
-        && /https?:\/\//i.test(sources);
+        && /\[\d+\]\s*Tavily\s+—\s+.+https:\/\/\S+/i.test(sources);
+}
+
+function hasCurrentPythonBot(placeData) {
+    const cacheDate = placeData.pythonBotCacheAt?.toDate?.();
+    return placeData.pythonBotCacheVersion === PYTHON_BOT_CACHE_VERSION
+        && cacheDate instanceof Date
+        && Date.now() - cacheDate.getTime() <= PYTHON_BOT_CACHE_TTL_MS
+        && hasCompletePythonBot(placeData.pythonBot);
 }
 
 function renderPythonBot(text) {
@@ -79,10 +86,10 @@ function renderPythonBot(text) {
     }
 }
 
-function getGeminiQuotaMessage(retryAfterSeconds) {
+function getAiRateLimitMessage(retryAfterSeconds) {
     const seconds = Number(retryAfterSeconds);
     if (!Number.isFinite(seconds) || seconds <= 0) {
-        return 'Yapay zeka günlük kullanım kotasına ulaştı. Lütfen daha sonra tekrar deneyin.';
+        return 'AI servisi istek sınırına ulaştı. Lütfen daha sonra tekrar deneyin.';
     }
 
     const hours = Math.floor(seconds / 3600);
@@ -90,7 +97,7 @@ function getGeminiQuotaMessage(retryAfterSeconds) {
     const wait = hours
         ? `${hours} saat${minutes ? ` ${minutes} dakika` : ''}`
         : `${Math.max(minutes, 1)} dakika`;
-    return `Yapay zeka günlük kullanım kotasına ulaştı. Yaklaşık ${wait} sonra tekrar deneyin.`;
+    return `AI servisi istek sınırına ulaştı. Yaklaşık ${wait} sonra tekrar deneyin.`;
 }
 
 async function loadSiteOwnerText() {
@@ -105,10 +112,10 @@ async function loadSiteOwnerText() {
         siteOwnerSkeleton.hidden = true;
         siteOwnerText.textContent = siteOwnerTextValue || 'Bu alan için henüz bilgi girilmedi.';
         pythonSkeleton.hidden = true;
-        if (hasCompletePythonBot(data.pythonBot)) renderPythonBot(data.pythonBot);
+        if (hasCurrentPythonBot(data)) renderPythonBot(data.pythonBot);
         else pythonText.textContent = 'Eksik bilgi yenileniyor; güvenilir kaynaklar aranıyor...';
         if (data.yapayZeka) aiStoryText.textContent = data.yapayZeka;
-        if (!hasCompletePythonBot(data.pythonBot)) generatePythonBot();
+        if (!hasCurrentPythonBot(data)) generatePythonBot();
         loadWeather(data);
         return data;
     } catch (error) {
@@ -126,9 +133,11 @@ async function generatePythonBot() {
             body: JSON.stringify({ yerAdi: placeName })
         });
         const result = await response.json();
-        if (response.status === 429) throw new Error(getGeminiQuotaMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
-        if (!response.ok) throw new Error(result.error || result.detail || 'Python botu çalışmadı.');
-        if (!result.pythonBot) throw new Error('Bot boş yanıt verdi.');
+        if (response.status === 429) throw new Error(result.error || 'Tavily arama kotası doldu. Daha sonra tekrar deneyin.');
+        if (!response.ok) throw new Error(result.detail || result.error || 'Python botu çalışmadı.');
+        if (result.cacheVersion !== PYTHON_BOT_CACHE_VERSION || !result.pythonBot) {
+            throw new Error('Bot yanıtı güncel biçimde değil. API dağıtımını kontrol edip tekrar deneyin.');
+        }
         renderPythonBot(result.pythonBot);
     } catch (error) {
         pythonText.textContent = error.message || 'Kaynak alınamadı. Lütfen daha sonra tekrar deneyin.';
@@ -205,7 +214,7 @@ async function generateAiStory() {
             throw new Error('AI sunucusu bulunamadı. Vercel API adresini ayarlayın.');
         }
         const result = await response.json();
-        if (response.status === 429) throw new Error(getGeminiQuotaMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
+        if (response.status === 429) throw new Error(getAiRateLimitMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
         if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
         stopAiStatusMessages('Hazır.');
@@ -219,11 +228,11 @@ async function generateAiStory() {
 function startAiStatusMessages() {
     stopAiStatusMessages();
     aiMessage.classList.add('ai-loading');
-    aiMessage.textContent = 'Kaynaklar taranıyor...';
+    aiMessage.textContent = 'Hikaye hazırlanıyor...';
     aiStatusTimers = [
-        [2200, 'Özet analiz ediliyor...'],
-        [4400, 'Metin yazıya dökülüyor...'],
-        [6600, 'Bilgiler düzenleniyor...'],
+        [2200, 'Yer adının kökeni inceleniyor...'],
+        [4400, 'Hikaye yazılıyor...'],
+        [6600, 'Yanıt düzenleniyor...'],
         [8800, 'Son kontroller yapılıyor...']
     ].map(([delay, message]) => setTimeout(() => {
         aiMessage.textContent = message;

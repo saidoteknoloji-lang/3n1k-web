@@ -11,6 +11,7 @@ const query = new URLSearchParams(window.location.search).get('q');
 const placeName = query ? query.trim() : '';
 const PYTHON_BOT_CACHE_VERSION = 3;
 const PYTHON_BOT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const AI_STORY_TIMEOUT_MS = 250000;
 let aiStatusTimers = [];
 
 const firebaseConfig = {
@@ -203,11 +204,14 @@ async function generateAiStory() {
         return;
     }
     startAiStatusMessages();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AI_STORY_TIMEOUT_MS);
     try {
         const response = await fetch(`${apiBaseUrl}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sehirAdi: placeName })
+            body: JSON.stringify({ sehirAdi: placeName }),
+            signal: controller.signal
         });
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
@@ -215,13 +219,19 @@ async function generateAiStory() {
         }
         const result = await response.json();
         if (response.status === 429) throw new Error(getAiRateLimitMessage(result.retryAfterSeconds || response.headers.get('Retry-After')));
-        if (!response.ok) throw new Error(result.detail || result.error || 'Hikaye oluşturulamadı.');
+        if (!response.ok) throw new Error(result.error || result.detail || 'Hikaye oluşturulamadı.');
         aiStoryText.textContent = result.hikaye || 'Hikaye boş döndü.';
-        stopAiStatusMessages('Hazır.');
+        stopAiStatusMessages(result.savedToFirebase === false
+            ? `Hikaye oluşturuldu fakat Firebase kaydı başarısız: ${result.saveError || 'Vercel Firebase ayarlarını kontrol edin.'}`
+            : 'Hazır.');
     } catch (error) {
-        stopAiStatusMessages(error.message || 'Hikaye oluşturulamadı.');
+        const message = error.name === 'AbortError'
+            ? 'Hikaye isteği zaman aşımına uğradı. Lütfen tekrar deneyin.'
+            : error.message || 'Hikaye oluşturulamadı.';
+        stopAiStatusMessages(message);
         console.error('AI hikayesi oluşturulamadı.', error);
     } finally {
+        clearTimeout(timeout);
     }
 }
 
@@ -233,7 +243,12 @@ function startAiStatusMessages() {
         [2200, 'Yer adının kökeni inceleniyor...'],
         [4400, 'Hikaye yazılıyor...'],
         [6600, 'Yanıt düzenleniyor...'],
-        [8800, 'Son kontroller yapılıyor...']
+        [8800, 'Son kontroller yapılıyor...'],
+        [20000, 'Evren’den yanıt bekleniyor; bu işlem biraz sürebilir...'],
+        [45000, 'Yanıt henüz gelmedi, bağlantı bekleniyor...'],
+        [90000, 'Evren yanıtı hazırlanıyor; lütfen sayfayı kapatmayın...'],
+        [150000, 'Yanıt beklenenden uzun sürüyor; bağlantı açık tutuluyor...'],
+        [210000, 'Son yanıt bekleniyor...']
     ].map(([delay, message]) => setTimeout(() => {
         aiMessage.textContent = message;
     }, delay));

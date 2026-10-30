@@ -1,6 +1,6 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import { setCorsHeaders } from "./cors.js";
+import { getAdminFirestore } from "./firebase-admin.js";
 
 const FETCH_TIMEOUT_MS = 12000;
 const PYTHON_BOT_CACHE_VERSION = 3;
@@ -18,23 +18,6 @@ function normalizePlaceId(value) {
     .replace(/ı/g, "i").replace(/ğ/g, "g").replace(/ü/g, "u")
     .replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 120);
-}
-
-function getAdminFirestore() {
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!serviceAccountJson) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT Vercel ortam değişkeninde tanımlı değil.");
-  }
-  const serviceAccount = JSON.parse(serviceAccountJson);
-  if (serviceAccount.project_id !== "n1k-12d03") {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT n1k-12d03 projesine ait değil.");
-  }
-
-  const existingApp = getApps().find(app => app.name === "place-name-cache");
-  const app = existingApp || initializeApp({
-    credential: cert(serviceAccount)
-  }, "place-name-cache");
-  return getFirestore(app);
 }
 
 async function fetchWithTimeout(url, options = {}) {

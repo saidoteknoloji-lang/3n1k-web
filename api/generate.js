@@ -1,8 +1,14 @@
 import { setCorsHeaders } from "./cors.js";
+import { Timestamp } from "firebase-admin/firestore";
+import { getAdminFirestore } from "./firebase-admin.js";
 
 const DEFAULT_EVREN_BASE_URL = "https://evren-llmapi.ssyz.org.tr";
 const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash";
-const EVREN_API_TIMEOUT_MS = 60000;
+const EVREN_API_TIMEOUT_MS = 240000;
+
+export const config = {
+  maxDuration: 300
+};
 
 function getErrorMessage(result, fallback) {
   const error = result?.error;
@@ -53,6 +59,22 @@ function getEmptyResponseDetail(result) {
   });
 }
 
+function normalizePlaceId(value) {
+  return String(value || "").toLocaleLowerCase("tr-TR").normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i").replace(/ğ/g, "g").replace(/ü/g, "u")
+    .replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 120);
+}
+
+async function saveAiStory(placeName, story) {
+  const placeId = normalizePlaceId(placeName) || "isimsiz-yer";
+  await getAdminFirestore().collection("yerler").doc(placeId).set({
+    yapayZeka: story,
+    yapayZekaGuncelleme: Timestamp.now()
+  }, { merge: true });
+}
+
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
 
@@ -80,9 +102,11 @@ export default async function handler(req, res) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), EVREN_API_TIMEOUT_MS);
     let response;
+    let rawResponse;
     try {
       response = await fetch(`${baseUrl}/v1/messages`, {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
@@ -112,11 +136,11 @@ Kurallar: Şehir tanıtımı yapma. Yer adının kökeni bilinmiyorsa bunu açı
           }]
         })
       });
+      rawResponse = await response.text();
     } finally {
       clearTimeout(timeout);
     }
 
-    const rawResponse = await response.text();
     let result;
     try {
       result = JSON.parse(rawResponse);
@@ -146,7 +170,18 @@ Kurallar: Şehir tanıtımı yapma. Yer adının kökeni bilinmiyorsa bunu açı
         detail: getEmptyResponseDetail(result)
       });
     }
-    return res.status(200).json({ hikaye });
+
+    try {
+      await saveAiStory(sehirAdi, hikaye);
+      return res.status(200).json({ hikaye, savedToFirebase: true });
+    } catch (error) {
+      console.error("AI hikayesi Firebase'e kaydedilemedi:", error);
+      return res.status(200).json({
+        hikaye,
+        savedToFirebase: false,
+        saveError: error instanceof Error ? error.message : "Bilinmeyen Firebase hatası."
+      });
+    }
 
   } catch (error) {
     console.error("Evren API hatası:", error);

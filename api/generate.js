@@ -18,6 +18,41 @@ function getRetryAfterSeconds(response) {
   return Number.isFinite(value) && value > 0 ? Math.ceil(value) : null;
 }
 
+function getTextContent(value) {
+  if (typeof value === "string") return value.trim();
+  if (!Array.isArray(value)) return "";
+
+  return value
+    .filter(block => typeof block === "string" || block?.type === "text")
+    .map(block => typeof block === "string" ? block : block.text || "")
+    .join("\n")
+    .trim();
+}
+
+function extractStoryText(result) {
+  const content = getTextContent(result.content)
+    || getTextContent(result.choices?.[0]?.message?.content)
+    || getTextContent(result.output_text)
+    || getTextContent(result.message?.content)
+    || getTextContent(result.completion);
+  return content;
+}
+
+function getEmptyResponseDetail(result) {
+  const content = result.content;
+  const contentTypes = Array.isArray(content)
+    ? content.map(block => typeof block === "object" ? block?.type || "unknown" : typeof block)
+    : typeof content;
+  const choice = result.choices?.[0];
+
+  return JSON.stringify({
+    fields: Object.keys(result).slice(0, 20),
+    contentTypes,
+    finishReason: choice?.finish_reason || result.stop_reason || null,
+    model: result.model || null
+  });
+}
+
 export default async function handler(req, res) {
   setCorsHeaders(req, res);
 
@@ -104,11 +139,12 @@ Kurallar: Şehir tanıtımı yapma. Yer adının kökeni bilinmiyorsa bunu açı
       }
       return res.status(502).json({ error: "Evren API isteği başarısız.", detail });
     }
-    const hikaye = Array.isArray(result.content)
-      ? result.content.filter(block => block.type === "text").map(block => block.text || "").join("\n").trim()
-      : "";
+    const hikaye = extractStoryText(result);
     if (!hikaye) {
-      return res.status(502).json({ error: "Evren API boş metin yanıtı döndürdü." });
+      return res.status(502).json({
+        error: "Evren API yanıtında hikâye metni bulunamadı.",
+        detail: getEmptyResponseDetail(result)
+      });
     }
     return res.status(200).json({ hikaye });
 

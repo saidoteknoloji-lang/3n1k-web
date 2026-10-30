@@ -5,6 +5,7 @@ import { getAdminFirestore } from "./firebase-admin.js";
 const DEFAULT_EVREN_BASE_URL = "https://evren-llmapi.ssyz.org.tr";
 const DEFAULT_EVREN_MODEL = "deepseek-v4.1-flash";
 const EVREN_API_TIMEOUT_MS = 240000;
+const EVREN_MAX_TOKENS = 4096;
 
 export const config = {
   maxDuration: 300
@@ -114,7 +115,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 1400,
+          max_tokens: EVREN_MAX_TOKENS,
           system: `Türkiye'deki yer adlarının kökenini anlatan Türkçe bir yazım yardımcısısın. Kesin olmayan etimolojileri kesin gerçek gibi sunma; bilgi uydurma. Kullanıcıdan gelen yer adı için yalnızca adın anlamı, kökeni, adlandırılma nedeni ve tarih içindeki biçimleri hakkında yaz. Şehir tanıtımı, turistik yerler, nüfus ve genel şehir tarihiyle konuyu doldurma. Yanıtı yalnızca aşağıdaki dört başlık ve paragraflarla ver; giriş, sonuç veya kaynakça ekleme. Her başlık altında 3-5 cümleyi geçmeyen tek paragraf kullan. Güvenilir bilgi yoksa bunu açıkça belirt.`,
           messages: [{
             role: "user",

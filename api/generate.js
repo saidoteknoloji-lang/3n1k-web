@@ -108,7 +108,7 @@ export default async function handler(req, res) {
         method: "POST",
         signal: controller.signal,
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
+          "x-api-key": apiKey,
           "Content-Type": "application/json",
           "anthropic-version": "2023-06-01"
         },
